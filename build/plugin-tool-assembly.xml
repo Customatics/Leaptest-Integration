@@ -7,7 +7,7 @@
     </formats>
     <files>
         <file>
-            <source>../LeapTestTeamCityBridge-runner/teamcity-plugin.xml</source>
+            <source>../leaptest-integration-runner/teamcity-plugin.xml</source>
             <outputDirectory>/</outputDirectory>
         </file>
     </files>
@@ -17,7 +17,7 @@
                 <include>**/*.exe</include>
                 <include>**/*.dll</include>
             </includes>
-            <directory>../LeapTestTeamCityBridge-runner/bin</directory>
+            <directory>../leaptest-integration-runner/bin</directory>
             <outputDirectory>bin/</outputDirectory>
         </fileSet>
     </fileSets>

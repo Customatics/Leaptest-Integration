@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>LeapTestTeamCityBridgeGroup</groupId>
-  <artifactId>LeapTestTeamCityBridge</artifactId>
-  <version>1.0-SNAPSHOT</version>
+
+  <groupId>com.customatics</groupId>
+  <artifactId>leaptest-integration</artifactId>
+  <version>1.0.0</version>
   <packaging>pom</packaging>
   <properties>
       <teamcity-version>10.0</teamcity-version>
@@ -35,17 +36,15 @@
                   <groupId>org.jetbrains.teamcity</groupId>
                   <artifactId>teamcity-sdk-maven-plugin</artifactId>
                   <version>0.2</version>
-                  <configuration>
-                      <!-- <teamcityDir>/path/to/tc/distro</teamcityDir> -->
-                  </configuration>
+                  <configuration/>
               </plugin>
           </plugins>
       </pluginManagement>
   </build>
   <modules>
-    <module>LeapTestTeamCityBridge-server</module>
-    <module>LeapTestTeamCityBridge-agent</module>
-    <module>LeapTestTeamCityBridge-common</module>
+    <module>leaptest-integration-server</module>
+    <module>leaptest-integration-agent</module>
+    <module>leaptest-integration-common</module>
     <module>build</module>
   </modules>
 </project>

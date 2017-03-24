@@ -7,7 +7,7 @@
     </formats>
     <files>
         <file>
-            <source>../LeapTestTeamCityBridge-agent/teamcity-plugin.xml</source>
+            <source>../leaptest-integration-agent/teamcity-plugin.xml</source>
             <outputDirectory>/</outputDirectory>
         </file>
     </files>
@@ -15,8 +15,8 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>LeapTestTeamCityBridgeGroup:LeapTestTeamCityBridge-agent</include>
-                <include>LeapTestTeamCityBridgeGroup:LeapTestTeamCityBridge-common</include>
+                <include>com.customatics:leaptest-integration-agent</include>
+                <include>com.customatics:leaptest-integration-common</include>
             </includes>
             <binaries>
                 <outputDirectory>lib</outputDirectory>

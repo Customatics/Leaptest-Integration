@@ -11,11 +11,11 @@
          <outputDirectory>/</outputDirectory>
      </file> 
      <file>
-         <source>target/LeapTestTeamCityBridge-agent.zip</source>
+         <source>target/leaptest-integration-agent.zip</source>
          <outputDirectory>agent</outputDirectory>
      </file>
       <file>
-          <source>target/LeapTestTeamCityBridge-runner.zip</source>
+          <source>target/leaptest-integration-runner.zip</source>
           <outputDirectory>agent</outputDirectory>
       </file>
   </files>
@@ -23,8 +23,8 @@
     <moduleSet>
        <useAllReactorProjects>true</useAllReactorProjects>
        <includes>
-           <include>LeapTestTeamCityBridgeGroup:LeapTestTeamCityBridge-server</include>
-           <include>LeapTestTeamCityBridgeGroup:LeapTestTeamCityBridge-common</include>
+           <include>com.customatics:leaptest-integration-server</include>
+           <include>com.customatics:leaptest-integration-common</include>
        </includes> 
        <binaries>
            <outputDirectory>server</outputDirectory>

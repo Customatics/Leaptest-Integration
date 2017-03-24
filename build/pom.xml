@@ -2,33 +2,33 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>LeapTestTeamCityBridge</artifactId>
-    <groupId>LeapTestTeamCityBridgeGroup</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>leaptest-integration</artifactId>
+    <groupId>com.customatics</groupId>
+    <version>1.0.0</version>
   </parent>
   <artifactId>build</artifactId>
   <packaging>pom</packaging>
   <properties>
       <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
-      <teamcity.LeapTestTeamCityBridge.plugin.version>snapshot-${maven.build.timestamp}</teamcity.LeapTestTeamCityBridge.plugin.version>
-      <teamcity.LeapTestTeamCityBridge.plugin.vendorName>Plugin vendor name</teamcity.LeapTestTeamCityBridge.plugin.vendorName>
-      <teamcity.LeapTestTeamCityBridge.plugin.vendorUrl>Plugin vendor URL</teamcity.LeapTestTeamCityBridge.plugin.vendorUrl>
+      <teamcity.leaptest-integration.plugin.version>snapshot-${maven.build.timestamp}</teamcity.leaptest-integration.plugin.version>
+      <teamcity.leaptest-integration.plugin.vendorName>Plugin vendor name</teamcity.leaptest-integration.plugin.vendorName>
+      <teamcity.leaptest-integration.plugin.vendorUrl>Plugin vendor URL</teamcity.leaptest-integration.plugin.vendorUrl>
   </properties>
   <dependencies>
       <dependency>
-           <groupId>LeapTestTeamCityBridgeGroup</groupId>
-           <artifactId>LeapTestTeamCityBridge-agent</artifactId>
-           <version>1.0-SNAPSHOT</version>
+           <groupId>com.customatics</groupId>
+           <artifactId>leaptest-integration-agent</artifactId>
+           <version>1.0.0</version>
       </dependency>
       <dependency>
-           <groupId>LeapTestTeamCityBridgeGroup</groupId>
-           <artifactId>LeapTestTeamCityBridge-common</artifactId>
-           <version>1.0-SNAPSHOT</version>
+           <groupId>com.customatics</groupId>
+           <artifactId>leaptest-integration-common</artifactId>
+           <version>1.0.0</version>
       </dependency>
       <dependency>
-           <groupId>LeapTestTeamCityBridgeGroup</groupId>
-           <artifactId>LeapTestTeamCityBridge-server</artifactId>
-           <version>1.0-SNAPSHOT</version>
+           <groupId>com.customatics</groupId>
+           <artifactId>leaptest-integration-server</artifactId>
+           <version>1.0.0</version>
       </dependency>
   </dependencies>
   <build>
@@ -51,15 +51,15 @@
                 <replacements>
                     <replacement>
                         <token>@Version@</token>
-                        <value>${teamcity.LeapTestTeamCityBridge.plugin.version}</value>
+                        <value>${teamcity.leaptest-integration.plugin.version}</value>
                     </replacement>
                     <replacement>
                         <token>@VendorName@</token>
-                        <value>${teamcity.LeapTestTeamCityBridge.plugin.vendorName}</value>
+                        <value>${teamcity.leaptest-integration.plugin.vendorName}</value>
                     </replacement>
                     <replacement>
                         <token>@VendorURL@</token>
-                        <value>${teamcity.LeapTestTeamCityBridge.plugin.vendorUrl}</value>
+                        <value>${teamcity.leaptest-integration.plugin.vendorUrl}</value>
                     </replacement>
                 </replacements>                        
             </configuration>
@@ -75,7 +75,7 @@
                   <goal>single</goal>
                 </goals>
                 <configuration>
-                  <finalName>LeapTestTeamCityBridge-agent</finalName>
+                  <finalName>leaptest-integration-agent</finalName>
                   <appendAssemblyId>false</appendAssemblyId>
                   <descriptors>
                     <descriptor>plugin-agent-assembly.xml</descriptor>
@@ -89,7 +89,7 @@
                         <goal>single</goal>
                     </goals>
                     <configuration>
-                        <finalName>LeapTestTeamCityBridge-runner</finalName>
+                        <finalName>leaptest-integration-runner</finalName>
                         <appendAssemblyId>false</appendAssemblyId>
                         <descriptors>
                             <descriptor>plugin-tool-assembly.xml</descriptor>
@@ -103,7 +103,7 @@
                   <goal>single</goal>
                 </goals>
                 <configuration>
-                  <finalName>LeapTestTeamCityBridge</finalName>
+                  <finalName>leaptest-integration</finalName>
                   <outputDirectory>${project.parent.build.directory}</outputDirectory>
                   <appendAssemblyId>false</appendAssemblyId>
                   <descriptors>

@@ -26,6 +26,10 @@ Leaptest is a mighty automation testing system and now it can be used for runnin
 4. Run your project and get results. Enjoy!
 
 # Screenshots
-  
+![ScreenShot](http://customatics.com/wp-content/uploads/2017/03/tc-config.png)
+![ScreenShot](http://customatics.com/wp-content/uploads/2017/03/tc-report-overview.png)
+![ScreenShot](http://customatics.com/wp-content/uploads/2017/03/tc-report-cases.png)
+![ScreenShot](http://customatics.com/wp-content/uploads/2017/03/tc-report-build_log.png)
+![ScreenShot](http://customatics.com/wp-content/uploads/2017/03/tc-report-overview-exceptions.png)
 
 

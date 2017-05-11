@@ -35,7 +35,7 @@ public class LeapTestTeamCityBridgeRunType extends RunType {
     @NotNull
     @Override
     public String getDescription() {
-        return "Integrates Leaptest codeless test automation with Jenkins. Run tests, get results, generate reports.";
+        return "Integrates Leaptest codeless test automation with Teamcity. Run tests, get results, generate reports.";
     }
 
     @Override
@@ -61,8 +61,8 @@ public class LeapTestTeamCityBridgeRunType extends RunType {
     @Override
     public Map<String, String> getDefaultRunnerProperties() {
         HashMap<String, String> defaults = new HashMap<String, String>();
-        defaults.put(StringConstants.ParameterName_Version, "1.1.0");
         defaults.put(StringConstants.ParameterName_DoneStatus, "Failed");
+        defaults.put(StringConstants.ParameterName_TimeDelay,"3");
         return defaults;
     }
 
@@ -78,18 +78,16 @@ public class LeapTestTeamCityBridgeRunType extends RunType {
     @Override
     public String describeParameters(@NotNull Map<String, String> parameters) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Plugin core version: ");
-        sb.append(parameters.get(StringConstants.ParameterName_Version));
         sb.append("\nServer URL: ");
-        sb.append(parameters.get(StringConstants.ParameterName_URLs));
+        sb.append(parameters.get(StringConstants.ParameterName_ServerURL));
         sb.append("\nTime Delay: ");
         sb.append(parameters.get(StringConstants.ParameterName_TimeDelay));
         sb.append("\nDone Status As:");
         sb.append(parameters.get(StringConstants.ParameterName_DoneStatus));
         sb.append("\nSchedule Names: ");
-        sb.append(parameters.get(StringConstants.ParameterName_TestNames));
+        sb.append(parameters.get(StringConstants.ParameterName_ScheduleNames));
         sb.append("\nSchedule Ids: ");
-        sb.append(parameters.get(StringConstants.ParameterName_Ids));
+        sb.append(parameters.get(StringConstants.ParameterName_ScheduleIds));
         return sb.toString();
     }
 }

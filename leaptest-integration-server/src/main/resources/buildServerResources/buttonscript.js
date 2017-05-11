@@ -7,7 +7,7 @@
         {
 
             var json;
-            var url = document.getElementById("URLs").value + "/api/v1/runSchedules";
+            var url = document.getElementById("ServerURL").value + "/api/v1/runSchedules";
             var XHR = ("onload" in new XMLHttpRequest()) ? XMLHttpRequest : XDomainRequest;
             var xhr = new XHR();
             xhr.open('GET', url , true);
@@ -33,7 +33,7 @@
                 }
 
                     var projects = new Array();
-                    var projurl = document.getElementById("URLs").value + "/api/v1/Projects";
+                    var projurl = document.getElementById("ServerURL").value + "/api/v1/Projects";
                     var XHRPr = ("onload" in new XMLHttpRequest()) ? XMLHttpRequest : XDomainRequest;
                     var xhrPr = new XHRPr();
                     xhrPr.open('GET', projurl, true);
@@ -122,9 +122,9 @@
 
                          var boxes = $j("#container input:checkbox");
                          var existingTests = new Array();
-                         existingTests = TestNames.value.split("\n");
+                         existingTests = ScheduleNames.value.split("\n");
 
-                        if (TestNames.value != null && Ids.value != null) {
+                        if (ScheduleNames.value != null && ScheduleIds.value != null) {
 
                         for (var i = 0; i < existingTests.length; i++) {
                             for (j = 0; j < boxes.length; j++) {
@@ -151,13 +151,13 @@
                             IdsArray[IdsArray.length] = $j(box).val();
                         }
                     }
-                    TestNames.value = NamesArray.join("\n");
-                    Ids.value = IdsArray.join("\n");
+                    ScheduleNames.value = NamesArray.join("\n");
+                    ScheduleIds.value = IdsArray.join("\n");
 
                     });
 
                     $j(document).click(function (event) {
-                    if ($j(event.target).closest('#container').length == 0 && $j(event.target).attr('id') != 'mainButton')
+                    if ($j(event.target).closest('#container').length == 0 && $j(event.target).attr('id') != 'selectButton')
                      {
                           $j("#container input:checkbox").remove();
                           $j("#container li").remove();

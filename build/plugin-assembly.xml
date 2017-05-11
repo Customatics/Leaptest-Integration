@@ -14,10 +14,7 @@
          <source>target/leaptest-integration-agent.zip</source>
          <outputDirectory>agent</outputDirectory>
      </file>
-      <file>
-          <source>target/leaptest-integration-runner.zip</source>
-          <outputDirectory>agent</outputDirectory>
-      </file>
+
   </files>
   <moduleSets>
     <moduleSet>

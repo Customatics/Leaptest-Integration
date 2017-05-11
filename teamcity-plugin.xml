@@ -3,7 +3,7 @@
   <info>
     <name>Leaptest Integration</name>
     <display-name>leaptest-integration</display-name>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <description>Integrates Leaptest codeless test automation with Teamcity. Run tests, get results, generate reports.</description>
     <download-url>https://github.com/Customatics/Leaptest-Integration/archive/master.zip</download-url>
     <email>app@customatics.com</email>

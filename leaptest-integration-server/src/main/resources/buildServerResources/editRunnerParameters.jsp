@@ -5,7 +5,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <jsp:useBean id="propertiesBean" scope="request" type="jetbrains.buildServer.controllers.BasePropertiesBean"/>
 <jsp:useBean id="constants" class="com.customatics.leaptest_integration.StringConstants" />
-<jsp:useBean id="runners" class="com.customatics.leaptest_integration.Runners" />
 <jsp:useBean id="donestatuses" class="com.customatics.leaptest_integration.DoneStatuses" />
 <jsp:useBean id="teamcityPluginResourcesPath" scope="request" type="java.lang.String"/>
 
@@ -14,43 +13,24 @@
 
 <l:settingsGroup title="Runner Parameters">
 
-    <tr>
-        <th>
-            <label for="${constants.parameterName_Version}">Plugin core version: </label>
-        </th>
-        <td>
-            <props:selectProperty
-                    name="${constants.parameterName_Version}"
-                    enableFilter="true"
-                    id="leaptest-integration-version-selector"
-                    className="mediumField">
-                <c:forEach items="${runners.supportedVersions}" var="ver">
-                    <props:option value="${ver}">${ver}</props:option>
-                </c:forEach>
-            </props:selectProperty>
-        </td>
-    </tr>
-
         <tr>
                 <th><label>Server URL:</label></th>
                 <td>
-                    <props:textProperty name="${constants.parameterName_URLs}" className="longField"   />
+                    <props:textProperty name="${constants.parameterName_ServerURL}" className="longField"/>
                     <span class="smallNote">URL of your LeapTest Server</span>
-                    <span class="error" id="error_${constants.parameterName_URLs}"></span></td>
+                    <span class="error" id="error_${constants.parameterName_ServerURL}"></span></td>
                 </td>
         </tr>
          <tr>
               <th><label>Time Delay (in seconds):</label></th>
               <td>
-                   <props:textProperty name="${constants.parameterName_TimeDelay}" className="longField" value="5"  />
-                   <span class="smallNote">How much time to wait before trying to get schedule state. If state is still running, plugin will wait again! </span>
+                   <props:textProperty name="${constants.parameterName_TimeDelay}" className="longField"/>
+                   <span class="smallNote">How much time to wait before trying to get schedule state. If schedule is still running, plugin will wait again! By default it is 3 seconds.</span>
                    <span class="error" id="error_${constants.parameterName_TimeDelay}"></span></td>
               </td>
          </tr>
          <tr>
-                 <th>
-                     <label for="${constants.parameterName_DoneStatus}">Done status value: </label>
-                 </th>
+                 <th><label for="${constants.parameterName_DoneStatus}">Done status as: </label></th>
                  <td>
                      <props:selectProperty
                              name="${constants.parameterName_DoneStatus}"
@@ -65,39 +45,33 @@
          </tr>
         <tr>
 
-            <th>
-                <label for="${constants.parameterName_TestNames}">Schedule Names:</label>
-            </th>
+            <th><label for="${constants.parameterName_ScheduleNames}">Schedule Names:</label></th>
             <td style="position:relative;">
 
                 <props:multilineProperty
-                        name="${constants.parameterName_TestNames}"
+                        name="${constants.parameterName_ScheduleNames}"
                         className="longField"
                         linkTitle="Schedule Names"
                         rows="3"
                         cols="49"
-                        expanded="${true}"
-
-                        />
-
-                <span class="error" id="error_${constants.parameterName_TestNames}"></span>
+                        expanded="${true}"/>
+                <span class="error" id="error_${constants.parameterName_ScheduleNames}"></span>
                 <span class="smallNote">
                     Press button "Select Schedules" and get all available schedules to run grouped by projects!
                 </span>
-                <input type="button" class="btn btn-mini" id="mainButton" value="Select Schedules" onclick="GetSch()" style="position:relative; top: -100px; left: 430px;"/>
+                <input type="button" class="btn btn-mini" id="selectButton" value="Select Schedules" onclick="GetSch()" style="position:relative; top: -100px; left: 430px;"/>
                 <div id="container" class="popupDiv" style="display:none; position:absolute; top: 60px; left: 435px; min-width:250px; max-width:500px"></div>
             </td>
         </tr>
-        <tr>
+        <tr style="display:none">
              <td>
                  <props:multilineProperty
-                          name="${constants.parameterName_Ids}"
+                          name="${constants.parameterName_ScheduleIds}"
                           className="longField"
                           linkTitle=""
                           rows="3"
                            cols="49"
                            expanded="${true}"
-
                            />
             </td>
       </tr>
@@ -133,10 +107,9 @@
 
     head.appendChild(style);
 
-     var schtextarea = document.getElementById("Ids");
-         schtextarea.style.display = 'none';
+     var schtextarea = document.getElementById("ScheduleIds");
          schtextarea.readOnly='true';
-         var teststextarea = document.getElementById("TestNames");
+     var teststextarea = document.getElementById("ScheduleNames");
          teststextarea.readOnly='true';
    };
 </script>

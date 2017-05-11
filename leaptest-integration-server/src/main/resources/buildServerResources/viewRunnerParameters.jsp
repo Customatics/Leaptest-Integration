@@ -4,10 +4,10 @@
       <jsp:useBean id="constants" class="com.customatics.leaptest_integration.StringConstants" />
 
       <div class="parameter">
-          Plugin core version: <strong><props:displayValue name="Plugin core version" /></strong>
-          Server URL: <strong><props:displayValue name="${constants.ParameterName_URLs}" /></strong>
+
+          Server URL: <strong><props:displayValue name="${constants.ParameterName_ServerURL}" /></strong>
           Time Delay (in seconds): <strong><props:displayValue name="${constants.ParameterName_TimeDelay}" /></strong>
-          Done status value: <strong><props:displayValue name="Done status value" /></strong>
-          Schedule Names: <strong><props:displayValue name="${constants.ParameterName_TestNames}" emptyValue="${constants.ParameterName_TestNames}"/></strong>
-          <strong><props:displayValue name="${constants.ParameterName_Ids}" emptyValue="${constants.ParameterName_Ids}"/></strong>
+          Done status value: <strong><props:displayValue name="${constants.ParameterName_DoneStatus}" /></strong>
+          Schedule Names: <strong><props:displayValue name="${constants.ParameterName_ScheduleNames}" emptyValue="${constants.ParameterName_ScheduleNames}"/></strong>
+          <strong><props:displayValue name="${constants.ParameterName_ScheduleIds}" emptyValue="${constants.ParameterName_ScheduleIds}"/></strong>
       </div>

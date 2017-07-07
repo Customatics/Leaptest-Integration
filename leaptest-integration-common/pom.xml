@@ -4,25 +4,8 @@
   <parent>
     <artifactId>leaptest-integration</artifactId>
     <groupId>com.customatics</groupId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
   </parent>
-  <dependencies>
-    <dependency>
-      <groupId>com.ning</groupId>
-      <artifactId>async-http-client</artifactId>
-      <version>1.4.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.5</version>
-    </dependency>
-    <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json</artifactId>
-      <version>20160810</version>
-    </dependency>
-  </dependencies>
   <artifactId>leaptest-integration-common</artifactId>
   <packaging>jar</packaging>
 </project>

@@ -14,11 +14,11 @@
 <l:settingsGroup title="Runner Parameters">
 
         <tr>
-                <th><label>Server URL:</label></th>
+                <th><label>LeapTest Controller URL:</label></th>
                 <td>
-                    <props:textProperty name="${constants.parameterName_ServerURL}" className="longField"/>
-                    <span class="smallNote">URL of your LeapTest Server</span>
-                    <span class="error" id="error_${constants.parameterName_ServerURL}"></span></td>
+                    <props:textProperty name="${constants.parameterName_LeaptestControllerURL}" className="longField"/>
+                    <span class="smallNote">URL of your LeapTest Controller</span>
+                    <span class="error" id="error_${constants.parameterName_LeaptestControllerURL}"></span></td>
                 </td>
         </tr>
          <tr>

@@ -78,8 +78,8 @@ public class LeapTestTeamCityBridgeRunType extends RunType {
     @Override
     public String describeParameters(@NotNull Map<String, String> parameters) {
         StringBuilder sb = new StringBuilder();
-        sb.append("\nServer URL: ");
-        sb.append(parameters.get(StringConstants.ParameterName_ServerURL));
+        sb.append("\nLeaptest Controller URL: ");
+        sb.append(parameters.get(StringConstants.ParameterName_LeaptestControllerURL));
         sb.append("\nTime Delay: ");
         sb.append(parameters.get(StringConstants.ParameterName_TimeDelay));
         sb.append("\nDone Status As:");

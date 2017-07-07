@@ -5,7 +5,7 @@
 
       <div class="parameter">
 
-          Server URL: <strong><props:displayValue name="${constants.ParameterName_ServerURL}" /></strong>
+          Leaptest controller URL: <strong><props:displayValue name="${constants.ParameterName_LeaptestControllerURL}" /></strong>
           Time Delay (in seconds): <strong><props:displayValue name="${constants.ParameterName_TimeDelay}" /></strong>
           Done status value: <strong><props:displayValue name="${constants.ParameterName_DoneStatus}" /></strong>
           Schedule Names: <strong><props:displayValue name="${constants.ParameterName_ScheduleNames}" emptyValue="${constants.ParameterName_ScheduleNames}"/></strong>

@@ -92,7 +92,7 @@ public final class PluginHandler {
 
                             String Id = Utils.defaultStringIfNull(jsonSchedule.get("Id"), "null Id");
                             String Title = Utils.defaultStringIfNull(jsonSchedule.get("Title"), "null Title");
-                            //TODO check if schedules can be without titles
+
 
                             if (Id.contentEquals(rawSchedule)) {
                                 if (!schedulesIdTitleHashMap.containsValue(Title)) {
@@ -127,13 +127,14 @@ public final class PluginHandler {
             }
 
         } catch (ConnectException e){
-            logger.error( e.getMessage());
+            String connectionErrorMessage = String.format(Messages.COULD_NOT_CONNECT_TO, e.getMessage());
+            throw new Exception(connectionErrorMessage);
         } catch (InterruptedException e) {
-            logger.error( e.getMessage());
+            throw new Exception(e);
         } catch (ExecutionException e) {
-            logger.error( e.getMessage());
+            throw new Exception(e);
         } catch (IOException e) {
-            logger.error( e.getMessage());
+            throw new Exception(e);
         } catch (Exception e) {
             logger.error(Messages.SCHEDULE_TITLE_OR_ID_ARE_NOT_GOT);
             logger.error(e.getMessage());
@@ -191,12 +192,15 @@ public final class PluginHandler {
                     throw new Exception(errorMessage);
             }
 
+        } catch (ConnectException e){
+            String connectionErrorMessage = String.format(Messages.COULD_NOT_CONNECT_TO, e.getMessage());
+            throw new Exception(connectionErrorMessage);
         } catch (InterruptedException e) {
-            logger.error(e.getMessage());
+            throw new Exception(e);
         } catch (ExecutionException e) {
-            logger.error(e.getMessage());
+            throw new Exception(e);
         } catch (IOException e) {
-            logger.error(e.getMessage());
+            throw new Exception(e);
         }
         catch (Exception e){
             String errorMessage = String.format(Messages.SCHEDULE_RUN_FAILURE,  schedule.getValue(), schedule.getKey());
@@ -358,12 +362,15 @@ public final class PluginHandler {
                     throw new Exception(errorMessage);
             }
 
+        } catch (ConnectException e){
+            String connectionErrorMessage = String.format(Messages.COULD_NOT_CONNECT_TO, e.getMessage());
+            throw new Exception(connectionErrorMessage);
         } catch (InterruptedException e) {
-            logger.error(e.getMessage());
+            throw new Exception(e);
         } catch (ExecutionException e) {
-            logger.error(e.getMessage());
+            throw new Exception(e);
         } catch (IOException e) {
-            logger.error(e.getMessage());
+            throw new Exception(e);
         } catch (Exception e)
         {
             String errorMessage = String.format(Messages.SCHEDULE_STATE_FAILURE, schedule.getValue(), schedule.getKey());

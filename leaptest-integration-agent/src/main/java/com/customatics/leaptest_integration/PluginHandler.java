@@ -11,6 +11,8 @@ import jetbrains.buildServer.agent.BuildProgressLogger;
 
 import java.io.*;
 import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,99 +67,226 @@ public final class PluginHandler {
             ArrayList<String> rawScheduleList,
             BuildProgressLogger logger,
             ArrayList<InvalidSchedule> invalidSchedules
-    )
-    {
+    ) throws Exception {
 
         HashMap<String, String> schedulesIdTitleHashMap = new HashMap<>();
 
         String scheduleListUri = String.format(Messages.GET_ALL_AVAILABLE_SCHEDULES_URI, leaptestControllerURL);
 
         try {
+            try {
 
-            AsyncHttpClient client = new AsyncHttpClient();
-            Response response = client.prepareGet(scheduleListUri).execute().get();
-            client = null;
+                AsyncHttpClient client = new AsyncHttpClient();
+                Response response = client.prepareGet(scheduleListUri).execute().get();
+                client = null;
 
-            switch (response.getStatusCode())
-            {
-                case 200:
+                switch (response.getStatusCode())
+                {
+                    case 200:
 
-                    JsonParser parser = new JsonParser();
-                    JsonArray jsonScheduleList = parser.parse(response.getResponseBody()).getAsJsonArray();
+                        JsonParser parser = new JsonParser();
+                        JsonArray jsonScheduleList = parser.parse(response.getResponseBody()).getAsJsonArray();
 
-                    for (String rawSchedule : rawScheduleList) {
-                        boolean successfullyMapped = false;
-                        for (JsonElement jsonScheduleElement : jsonScheduleList) {
-                            JsonObject jsonSchedule = jsonScheduleElement.getAsJsonObject();
+                        for (String rawSchedule : rawScheduleList)
+                        {
+                            boolean successfullyMapped = false;
+                            for (JsonElement jsonScheduleElement : jsonScheduleList) {
+                                JsonObject jsonSchedule = jsonScheduleElement.getAsJsonObject();
 
-                            String Id = Utils.defaultStringIfNull(jsonSchedule.get("Id"), "null Id");
-                            String Title = Utils.defaultStringIfNull(jsonSchedule.get("Title"), "null Title");
+                                String Id = Utils.defaultStringIfNull(jsonSchedule.get("Id"), "null Id");
+                                String Title = Utils.defaultStringIfNull(jsonSchedule.get("Title"), "null Title");
 
 
-                            if (Id.contentEquals(rawSchedule)) {
-                                if (!schedulesIdTitleHashMap.containsValue(Title)) {
-                                    schedulesIdTitleHashMap.put(rawSchedule, Title);
-                                    logger.message(String.format(Messages.SCHEDULE_DETECTED, Title, rawSchedule));
+                                if (Id.contentEquals(rawSchedule)) {
+                                    if (!schedulesIdTitleHashMap.containsValue(Title)) {
+                                        schedulesIdTitleHashMap.put(rawSchedule, Title);
+                                        logger.message(String.format(Messages.SCHEDULE_DETECTED, Title, rawSchedule));
+                                    }
+                                    successfullyMapped = true;
                                 }
-                                successfullyMapped = true;
+
+                                if (Title.contentEquals(rawSchedule)) {
+                                    if (!schedulesIdTitleHashMap.containsKey(Id)) {
+                                        schedulesIdTitleHashMap.put(Id, rawSchedule);
+                                        logger.message(String.format(Messages.SCHEDULE_DETECTED, rawSchedule, Title));
+                                    }
+                                    successfullyMapped = true;
+                                }
                             }
 
-                            if (Title.contentEquals(rawSchedule)) {
-                                if (!schedulesIdTitleHashMap.containsKey(Id)) {
-                                    schedulesIdTitleHashMap.put(Id, rawSchedule);
-                                    logger.message(String.format(Messages.SCHEDULE_DETECTED, rawSchedule, Title));
-                                }
-                                successfullyMapped = true;
-                            }
+                            if (!successfullyMapped)
+                                invalidSchedules.add(new InvalidSchedule(rawSchedule, Messages.NO_SUCH_SCHEDULE));
                         }
+                    break;
 
-                        if (!successfullyMapped)
-                            invalidSchedules.add(new InvalidSchedule(rawSchedule, Messages.NO_SUCH_SCHEDULE));
-                    }
-                break;
+                    case 445:
+                        String errorMessage445 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        errorMessage445 += String.format("\n%1$s", Messages.LICENSE_EXPIRED);
+                        throw new Exception(errorMessage445);
 
-                case 500:
-                    String errorMessage500 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
-                    errorMessage500 += String.format("\n%1$s",Messages.CONTROLLER_RESPONDED_WITH_ERRORS);
-                    throw new Exception(errorMessage500);
+                    case 500:
+                        String errorMessage500 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        errorMessage500 += String.format("\n%1$s", Messages.CONTROLLER_RESPONDED_WITH_ERRORS);
+                        throw new Exception(errorMessage500);
 
-                default:
-                    String errorMessage = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
-                    throw new Exception(errorMessage);
+                    default:
+                        String errorMessage = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        throw new Exception(errorMessage);
+                }
             }
-
-        } catch (ConnectException e){
-            String connectionErrorMessage = String.format(Messages.COULD_NOT_CONNECT_TO, e.getMessage());
-            throw new Exception(connectionErrorMessage);
-        } catch (InterruptedException e) {
-            throw new Exception(e);
-        } catch (ExecutionException e) {
-            throw new Exception(e);
-        } catch (IOException e) {
-            throw new Exception(e);
-        } catch (Exception e) {
-            logger.error(Messages.SCHEDULE_TITLE_OR_ID_ARE_NOT_GOT);
-            logger.error(e.getMessage());
-            logger.error(Messages.PLEASE_CONTACT_SUPPORT);
-        } finally {
-            return schedulesIdTitleHashMap;
+            catch (ConnectException | UnknownHostException e )
+            {
+                String connectionErrorMessage = String.format(Messages.COULD_NOT_CONNECT_TO, e.getMessage());
+                throw new Exception(connectionErrorMessage);
+            }
+            catch (InterruptedException e)
+            {
+                String interruptedExceptionMessage = String.format(Messages.INTERRUPTED_EXCEPTION, e.getMessage());
+                throw new Exception(interruptedExceptionMessage);
+            }
+            catch (ExecutionException e)
+            {
+                if(e.getCause() instanceof ConnectException || e.getCause() instanceof  UnknownHostException)
+                {
+                    String connectionErrorMessage = String.format(Messages.COULD_NOT_CONNECT_TO, e.getCause().getMessage());
+                    throw new Exception(connectionErrorMessage);
+                }
+                else
+                {
+                    String executionExceptionMessage = String.format(Messages.EXECUTION_EXCEPTION, e.getMessage());
+                    throw new Exception(executionExceptionMessage);
+                }
+            }
+            catch (IOException e)
+            {
+                String ioExceptionMessage = String.format(Messages.IO_EXCEPTION, e.getMessage());
+                throw new Exception(ioExceptionMessage);
+            }
         }
+        catch (Exception e)
+        {
+            logger.error(Messages.SCHEDULE_TITLE_OR_ID_ARE_NOT_GOT);
+            throw e;
+        }
+
+        return schedulesIdTitleHashMap;
     }
 
-    public boolean runSchedule(
+    public RUN_RESULT runSchedule(
             String leaptestAddress,
-            HashMap.Entry<String,String> schedule,
+            String scheduleId,
+            String scheduleTitle,
             int currentScheduleIndex,
             BuildProgressLogger logger,
             ArrayList<InvalidSchedule> invalidSchedules
-    )
-    {
-        boolean isSuccessfullyRun = false;
+    ) throws Exception {
+        RUN_RESULT isSuccessfullyRun = RUN_RESULT.RUN_FAIL;
 
-        String uri = String.format(Messages.RUN_SCHEDULE_URI, leaptestAddress, schedule.getKey());
+        String uri = String.format(Messages.RUN_SCHEDULE_URI, leaptestAddress, scheduleId);
 
         try {
+            try {
 
+                AsyncHttpClient client = new AsyncHttpClient();
+                Response response = client.preparePut(uri).setBody("").execute().get();
+                client = null;
+
+                switch (response.getStatusCode()) {
+                    case 204:
+                        isSuccessfullyRun = RUN_RESULT.RUN_SUCCESS;
+                        String successMessage = String.format(Messages.SCHEDULE_RUN_SUCCESS, scheduleTitle, scheduleId);
+                        logger.message(Messages.SCHEDULE_CONSOLE_LOG_SEPARATOR);
+                        logger.message(successMessage);
+                        break;
+
+                    case 404:
+                        String errorMessage404 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        errorMessage404 += String.format("\n%1$s", String.format(Messages.NO_SUCH_SCHEDULE_WAS_FOUND, scheduleTitle, scheduleId));
+                        throw new Exception(errorMessage404);
+
+                    case 444:
+                        String errorMessage444 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        errorMessage444 += String.format("\n%1$s", String.format(Messages.SCHEDULE_HAS_NO_CASES, scheduleTitle, scheduleId));
+                        throw new Exception(errorMessage444);
+
+                    case 445:
+                        String errorMessage445 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        errorMessage445 += String.format("\n%1$s", Messages.LICENSE_EXPIRED);
+                        throw new InterruptedException(errorMessage445);
+
+                    case 448:
+                        String errorMessage448 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        errorMessage448 += String.format("\n%1$s", String.format(Messages.CACHE_TIMEOUT_EXCEPTION, scheduleTitle, scheduleId));
+                        isSuccessfullyRun = RUN_RESULT.RUN_REPEAT;
+                        logger.error(errorMessage448);
+                        break;
+
+                    case 500:
+                        String errorMessage500 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        errorMessage500 += String.format("\n%1$s", String.format(Messages.SCHEDULE_IS_RUNNING_NOW, scheduleTitle, scheduleId));
+                        throw new Exception(errorMessage500);
+
+
+                    default:
+                        String errorMessage = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        throw new Exception(errorMessage);
+                }
+
+            } catch (ConnectException | UnknownHostException e)
+            {
+                String connectionErrorMessage = String.format(Messages.COULD_NOT_CONNECT_TO_BUT_WAIT, e.getMessage());
+                logger.error(connectionErrorMessage);
+                return RUN_RESULT.RUN_REPEAT;
+            }
+            catch (ExecutionException e)
+            {
+                if(e.getCause() instanceof ConnectException || e.getCause() instanceof UnknownHostException)
+                {
+                    String connectionErrorMessage = String.format(Messages.COULD_NOT_CONNECT_TO_BUT_WAIT, e.getCause().getMessage());
+                    logger.error(connectionErrorMessage);
+                    return RUN_RESULT.RUN_REPEAT;
+                }
+                else
+                {
+                    String executionExceptionMessage = String.format(Messages.EXECUTION_EXCEPTION, e.getMessage());
+                    throw new Exception(executionExceptionMessage);
+                }
+            }
+            catch (IOException e)
+            {
+                String ioExceptionMessage = String.format(Messages.IO_EXCEPTION, e.getMessage());
+                throw new Exception(ioExceptionMessage);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+        catch (InterruptedException e)
+        {
+            throw new Exception(e.getMessage());
+        }
+        catch (Exception e)
+        {
+            String errorMessage = String.format(Messages.SCHEDULE_RUN_FAILURE, scheduleTitle, scheduleId);
+            logger.error(errorMessage);
+            logger.error(e.getMessage());
+            logger.error(Messages.PLEASE_CONTACT_SUPPORT);
+            invalidSchedules.add(new InvalidSchedule(String.format(Messages.SCHEDULE_FORMAT, scheduleTitle, scheduleId), String.format("%1$s\n%2$s", errorMessage, e.getMessage())));
+            return RUN_RESULT.RUN_FAIL;
+        }
+
+        return isSuccessfullyRun;
+    }
+
+    public boolean stopSchedule(String leaptestAddress, String scheduleId, String scheduleTitle, BuildProgressLogger logger)
+    {
+        boolean isSuccessfullyStopped = false;
+
+        logger.error(String.format(Messages.STOPPING_SCHEDULE,scheduleTitle,scheduleId));
+        String uri = String.format(Messages.STOP_SCHEDULE_URI, leaptestAddress, scheduleId);
+        try
+        {
             AsyncHttpClient client = new AsyncHttpClient();
             Response response = client.preparePut(uri).setBody("").execute().get();
             client = null;
@@ -165,91 +294,61 @@ public final class PluginHandler {
             switch (response.getStatusCode())
             {
                 case 204:
-                    isSuccessfullyRun = true;
-                    String successMessage = String.format(Messages.SCHEDULE_RUN_SUCCESS, schedule.getValue(), schedule.getKey());
-                    logger.message(Messages.SCHEDULE_CONSOLE_LOG_SEPARATOR);
-                    logger.message(successMessage);
-                break;
-
-                case 404:
-                    String errorMessage404 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
-                    errorMessage404 += String.format("\n%1$s",String.format(Messages.NO_SUCH_SCHEDULE_WAS_FOUND, schedule.getValue(), schedule.getKey()));
-                    throw new Exception(errorMessage404);
-
-                case 444:
-                    String errorMessage444 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
-                    errorMessage444 += String.format("\n%1$s",String.format(Messages.SCHEDULE_HAS_NO_CASES,schedule.getValue(), schedule.getKey()));
-                    throw new Exception(errorMessage444);
-
-                case 500:
-                    String errorMessage500 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
-                    errorMessage500 += String.format("\n%1$s",String.format(Messages.SCHEDULE_IS_RUNNING_NOW, schedule.getValue(), schedule.getKey()));
-                    throw new Exception(errorMessage500);
-
-
+                    logger.error(String.format(Messages.STOP_SUCCESS,scheduleTitle,scheduleId));
+                    isSuccessfullyStopped = true;
+                    break;
                 default:
                     String errorMessage = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
                     throw new Exception(errorMessage);
+
             }
-
-        } catch (ConnectException e){
-            String connectionErrorMessage = String.format(Messages.COULD_NOT_CONNECT_TO, e.getMessage());
-            throw new Exception(connectionErrorMessage);
-        } catch (InterruptedException e) {
-            throw new Exception(e);
-        } catch (ExecutionException e) {
-            throw new Exception(e);
-        } catch (IOException e) {
-            throw new Exception(e);
-        }
-        catch (Exception e){
-            String errorMessage = String.format(Messages.SCHEDULE_RUN_FAILURE,  schedule.getValue(), schedule.getKey());
-            logger.error(errorMessage);
+        } catch (Exception e)
+        {
+            logger.error(String.format(Messages.STOP_FAIL,scheduleTitle,scheduleId));
             logger.error(e.getMessage());
-            logger.error(Messages.PLEASE_CONTACT_SUPPORT);
-            invalidSchedules.add(new InvalidSchedule(String.format(Messages.SCHEDULE_FORMAT,schedule.getValue(),schedule.getKey()),String.format("%1$s\n%2$s",errorMessage,e.getMessage())));
+        }
+        finally
+        {
+            return isSuccessfullyStopped;
+        }
 
-        }
-        finally {
-            return isSuccessfullyRun;
-        }
     }
 
     public boolean getScheduleState(
             String leaptestAddress,
-            HashMap.Entry<String,String> schedule,
+            String scheduleId,
+            String scheduleTitle,
             int currentScheduleIndex,
             String doneStatusValue,
             BuildProgressLogger logger,
             ArrayList<InvalidSchedule> invalidSchedules
-    )
-    {
+    ) throws InterruptedException {
         boolean isScheduleStillRunning = true;
 
-        String uri = String.format(Messages.GET_SCHEDULE_STATE_URI, leaptestAddress, schedule.getKey());
+        String uri = String.format(Messages.GET_SCHEDULE_STATE_URI, leaptestAddress, scheduleId);
 
         try {
+            try {
 
-            AsyncHttpClient client = new AsyncHttpClient();
-            Response response = client.prepareGet(uri).execute().get();
-            client = null;
+                AsyncHttpClient client = new AsyncHttpClient();
+                Response response = client.prepareGet(uri).execute().get();
+                client = null;
 
-            switch (response.getStatusCode())
-            {
-                case 200:
-                    JsonParser parser = new JsonParser();
-                    JsonObject jsonState = parser.parse(response.getResponseBody()).getAsJsonObject();
-                    parser = null;
+                switch (response.getStatusCode()) {
+                    case 200:
+                        JsonParser parser = new JsonParser();
+                        JsonObject jsonState = parser.parse(response.getResponseBody()).getAsJsonObject();
+                        parser = null;
 
-                    String ScheduleId = jsonState.get("ScheduleId").getAsString();
+                        String ScheduleId = jsonState.get("ScheduleId").getAsString();
 
-                    if (isScheduleStillRunning(jsonState))
-                        isScheduleStillRunning = true;
-                    else {
-                        isScheduleStillRunning = false;
+                        if (isScheduleStillRunning(jsonState))
+                            isScheduleStillRunning = true;
+                        else {
+                            isScheduleStillRunning = false;
 
-                        /////////Schedule Info
-                        JsonElement jsonLastRun = jsonState.get("LastRun");
+                            /////////Schedule Info
+                            JsonElement jsonLastRun = jsonState.get("LastRun");
 
 
                             JsonObject lastRun = jsonLastRun.getAsJsonObject();
@@ -333,7 +432,7 @@ public final class PluginHandler {
 
 
                                     logger.message("Environment: " + environments.get(i));
-                                    logger.logTestFailed(caseTitles.get(i),/* fullstacktrace*/null , null);
+                                    logger.logTestFailed(caseTitles.get(i),/* fullstacktrace*/null, null);
 
                                 }
 
@@ -344,43 +443,94 @@ public final class PluginHandler {
 
                             logger.logSuiteFinished(ScheduleTitle);
 
-                    }
-                break;
+                        }
+                        break;
 
-                case 404:
-                    String errorMessage404 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
-                    errorMessage404 += String.format("\n%1$s",String.format(Messages.NO_SUCH_SCHEDULE_WAS_FOUND, schedule.getValue(), schedule.getKey()));
-                    throw new Exception(errorMessage404);
+                    case 404:
+                        String errorMessage404 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        errorMessage404 += String.format("\n%1$s", String.format(Messages.NO_SUCH_SCHEDULE_WAS_FOUND, scheduleTitle, scheduleId));
+                        throw new Exception(errorMessage404);
 
-                case 500:
-                    String errorMessage500 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
-                    errorMessage500 += String.format("\n%1$s",Messages.CONTROLLER_RESPONDED_WITH_ERRORS);
-                    throw new Exception(errorMessage500);
+                    case 445:
+                        String errorMessage445 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        errorMessage445 += String.format("\n%1$s", Messages.LICENSE_EXPIRED);
+                        throw new InterruptedException(errorMessage445);
 
-                default:
-                    String errorMessage = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
-                    throw new Exception(errorMessage);
+                    case 448:
+                        String errorMessage448 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        errorMessage448 += String.format("\n%1$s", String.format(Messages.CACHE_TIMEOUT_EXCEPTION, scheduleTitle, scheduleId));
+                        isScheduleStillRunning = true;
+                        logger.error(errorMessage448);
+                        break;
+
+                    case 500:
+                        String errorMessage500 = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        errorMessage500 += String.format("\n%1$s", Messages.CONTROLLER_RESPONDED_WITH_ERRORS);
+                        throw new Exception(errorMessage500);
+
+                    default:
+                        String errorMessage = String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText());
+                        throw new Exception(errorMessage);
+                }
+
+            } catch (NoRouteToHostException e)
+            {
+                String connectionLostErrorMessage = String.format(Messages.CONNECTION_LOST, e.getCause().getMessage());
+                logger.error(connectionLostErrorMessage);
+                return true;
             }
+            catch (ConnectException | UnknownHostException e)
+            {
+                String connectionErrorMessage = String.format(Messages.COULD_NOT_CONNECT_TO_BUT_WAIT, e.getMessage());
+                logger.error(connectionErrorMessage);
+                return true;
+            }
+            catch (ExecutionException e)
+            {
+                if(e.getCause() instanceof ConnectException || e.getCause() instanceof  UnknownHostException)
+                {
+                    String connectionErrorMessage = String.format(Messages.COULD_NOT_CONNECT_TO_BUT_WAIT, e.getCause().getMessage());
+                    logger.error(connectionErrorMessage);
+                    return true;
+                }
+                else if(e.getCause() instanceof NoRouteToHostException)
+                {
+                    String connectionLostErrorMessage = String.format(Messages.CONNECTION_LOST, e.getCause().getMessage());
+                    logger.error(connectionLostErrorMessage);
+                    return true;
+                }
+                else
+                {
+                    String executionExceptionMessage = String.format(Messages.EXECUTION_EXCEPTION, e.getMessage());
+                    throw new Exception(executionExceptionMessage);
+                }
 
-        } catch (ConnectException e){
-            String connectionErrorMessage = String.format(Messages.COULD_NOT_CONNECT_TO, e.getMessage());
-            throw new Exception(connectionErrorMessage);
-        } catch (InterruptedException e) {
-            throw new Exception(e);
-        } catch (ExecutionException e) {
-            throw new Exception(e);
-        } catch (IOException e) {
-            throw new Exception(e);
-        } catch (Exception e)
+            }
+            catch (IOException e)
+            {
+                String ioExceptionMessage = String.format(Messages.IO_EXCEPTION, e.getMessage());
+                throw new Exception(ioExceptionMessage);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+        catch (InterruptedException e)
         {
-            String errorMessage = String.format(Messages.SCHEDULE_STATE_FAILURE, schedule.getValue(), schedule.getKey());
+            throw new InterruptedException(e.getMessage());
+        }
+        catch (Exception e)
+        {
+            String errorMessage = String.format(Messages.SCHEDULE_STATE_FAILURE, scheduleTitle, scheduleId);
             logger.error(errorMessage);
             logger.error(e.getMessage());
             logger.error(Messages.PLEASE_CONTACT_SUPPORT);
-            invalidSchedules.add(new InvalidSchedule(String.format(Messages.SCHEDULE_FORMAT,schedule.getValue(),schedule.getKey()),String.format("%1$S\n%2$s",errorMessage, e.getMessage())));
-        } finally {
-            return isScheduleStillRunning;
+            invalidSchedules.add(new InvalidSchedule(String.format(Messages.SCHEDULE_FORMAT, scheduleTitle, scheduleId), String.format("%1$s\n%2$s", errorMessage, e.getMessage())));
+            return false;
         }
+
+        return isScheduleStillRunning;
     }
 
     private boolean isScheduleStillRunning(JsonObject jsonState)

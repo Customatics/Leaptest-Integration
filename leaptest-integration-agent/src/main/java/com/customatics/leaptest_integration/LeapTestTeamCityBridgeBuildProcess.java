@@ -60,6 +60,7 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
         ArrayList<String> rawScheduleList = null;
 
         String leaptestControllerURL = getParameter(StringConstants.ParameterName_LeaptestControllerURL);
+        String accessKey = getParameter(StringConstants.ParameterName_AccessKey);
         String timeDelay = getParameter(StringConstants.ParameterName_TimeDelay);
         String doneStatusAs = getParameter(StringConstants.ParameterName_DoneStatus);
         String uri = String.format(Messages.GET_ALL_AVAILABLE_SCHEDULES_URI, leaptestControllerURL);
@@ -72,7 +73,7 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
             rawScheduleList = pluginHandler.getRawScheduleList(getParameter(StringConstants.ParameterName_ScheduleIds),getParameter(StringConstants.ParameterName_ScheduleNames));
 
             //Get schedule titles (or/and ids in case of pipeline)
-            schedulesIdTitleHashMap = pluginHandler.getSchedulesIdTitleHashMap(leaptestControllerURL,rawScheduleList,logger,invalidSchedules);
+            schedulesIdTitleHashMap = pluginHandler.getSchedulesIdTitleHashMap(leaptestControllerURL,accessKey,rawScheduleList,logger,invalidSchedules);
             rawScheduleList = null;
 
             if(schedulesIdTitleHashMap.isEmpty())
@@ -97,7 +98,7 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
                 {
                     schId = iter.next();
                     schTitle = schedulesIdTitleHashMap.get(schId);
-                    RUN_RESULT runResult = pluginHandler.runSchedule(leaptestControllerURL, schId, schTitle, currentScheduleIndex, logger,  invalidSchedules);
+                    RUN_RESULT runResult = pluginHandler.runSchedule(leaptestControllerURL, accessKey, schId, schTitle, currentScheduleIndex, logger,  invalidSchedules);
                     logger.message("Current schedule index: " + currentScheduleIndex);
 
                     if (runResult.equals(RUN_RESULT.RUN_SUCCESS)) // if schedule was successfully run
@@ -107,7 +108,7 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
                         do
                         {
                             Thread.sleep(delay * 1000); //Time delay
-                            isStillRunning = pluginHandler.getScheduleState(leaptestControllerURL,schId,schTitle,currentScheduleIndex,doneStatusAs,logger, invalidSchedules);
+                            isStillRunning = pluginHandler.getScheduleState(leaptestControllerURL, accessKey, schId,schTitle,currentScheduleIndex,doneStatusAs,logger, invalidSchedules);
                             if(isStillRunning) logger.message(String.format(Messages.SCHEDULE_IS_STILL_RUNNING, schTitle, schId));
                         }
                         while (isStillRunning);
@@ -154,7 +155,7 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
             try {
                 String interruptedExceptionMessage = String.format(Messages.INTERRUPTED_EXCEPTION, e.getMessage());
                 logger.error(interruptedExceptionMessage);
-                pluginHandler.stopSchedule(leaptestControllerURL, schId, schTitle, logger);
+                pluginHandler.stopSchedule(leaptestControllerURL, accessKey, schId, schTitle, logger);
                 logger.error("INTERRUPTED");
                 status = BuildFinishedStatus.INTERRUPTED;
             }

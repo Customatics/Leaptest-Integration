@@ -17,8 +17,16 @@
                 <th><label>LeapTest Controller URL:</label></th>
                 <td>
                     <props:textProperty name="${constants.parameterName_LeaptestControllerURL}" className="longField"/>
-                    <span class="smallNote">URL of your LeapTest Controller</span>
+                    <span class="smallNote">URL of your Leaptest Controller</span>
                     <span class="error" id="error_${constants.parameterName_LeaptestControllerURL}"></span></td>
+                </td>
+        </tr>
+        <tr>
+                <th><label>Access Key:</label></th>
+                <td>
+                    <props:textProperty name="${constants.parameterName_AccessKey}" className="longField"/>
+                    <span class="smallNote">Your access key for using Leaptest API</span>
+                    <span class="error" id="error_${constants.parameterName_AccessKey}"></span></td>
                 </td>
         </tr>
          <tr>

@@ -57,4 +57,8 @@ public final class Messages {
     public static final String STOPPING_SCHEDULE = "Stopping schedule %1$s[%2$s]!";
     public static final String STOP_SUCCESS = "Schedule %1$s[%2$s] stopped successfully!";
     public static final String STOP_FAIL = "Failed to stop schedule %1$s[%2$s]!";
+
+    public static final String WRONG_ACCESS_KEY = "Your Access Key is wrong, empty, changed or expired!";
+
+    public static final String INTEGRATION = "Teamcity-Integration";
 }

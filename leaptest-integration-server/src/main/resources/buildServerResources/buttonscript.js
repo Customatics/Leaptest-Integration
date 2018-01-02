@@ -1,23 +1,34 @@
 
 function GetSch()
     {
-        if(document.getElementById('container').innerHTML == "")
+        const address = document.getElementById("LeaptestControllerURL").value;
+        const accessKey = document.getElementById("AccessKey").value;
+
+        if(!address || !accessKey)
+        {
+            alert('"Address or Access Key field is empty! Cannot connect to server!"');
+        }
+        else
         {
 
+            if(document.getElementById('container').innerHTML == "")
+            {
+
                 $j.ajax({
-                   url: document.getElementById("LeaptestControllerURL").value + "/api/v1/runSchedules",
+                   url: address + "/api/v1/runSchedules",
                    type: 'GET',
+                   headers: { 'AccessKey': accessKey, 'Integration':'Teamcity-Integration' },
                    dataType:"json",
                    success: function(json)
                    {
-                         var container = document.getElementById("container");
+                         let container = document.getElementById("container");
                          container.style.display='block';
 
-                         var schName = new Array();
-                         var schId = new Array();
-                         var schProjectId = new Array();
+                         let schName = new Array();
+                         let schId = new Array();
+                         let schProjectId = new Array();
 
-                         for (var i = 0; i < json.length; i++) {
+                         for (let i = 0; i < json.length; i++) {
                              if (json[i].IsDisplayedInScheduleList == true) {
                                  schId.push(json[i].Id);
                                  schName.push(json[i].Title);
@@ -25,20 +36,21 @@ function GetSch()
                              }
                          }
 
-                         var projects = new Array();
+                         let projects = new Array();
 
                          $j.ajax({
-                            url: document.getElementById("LeaptestControllerURL").value + "/api/v1/Projects",
+                            url: address + "/api/v1/Projects",
                             type: 'GET',
+                            headers: { 'AccessKey': accessKey, 'Integration':'Teamcity-Integration' },
                             dataType: "json",
                             success: function(projJson)
                             {
-                                for(var i = 0; i < projJson.length; i++)
+                                for(let i = 0; i < projJson.length; i++)
                                     projects.push(projJson[i].Title);
 
-                                for(var i = 0; i < schProjectId.length; i++)
+                                for(let i = 0; i < schProjectId.length; i++)
                                 {
-                                    for(var j = 0; j < projJson.length; j++)
+                                    for(let j = 0; j < projJson.length; j++)
                                     {
 
                                         if(schProjectId[i] == projJson[j].Id)
@@ -51,28 +63,28 @@ function GetSch()
 
                                 container.innerHTML += '<br>';
 
-                                var drpdwn = document.createElement('ul');
+                                let drpdwn = document.createElement('ul');
                                 drpdwn.className = 'ul-treefree ul-dropfree';
 
-                                for(var i = 0; i < projects.length; i++)
+                                for(let i = 0; i < projects.length; i++)
                                 {
-                                    var projectli = document.createElement('li');
+                                    let projectli = document.createElement('li');
 
-                                    var drop = document.createElement('div');
+                                    let drop = document.createElement('div');
                                     drop.class = 'drop';
                                     drop.style = 'background-position: 0px 0px;';
                                     projectli.appendChild(drop);
                                     projectli.innerHTML+=projects[i];
 
-                                    var schul = document.createElement('ul');
+                                    let schul = document.createElement('ul');
                                     schul.style = 'display:none; font-weight: normal;';
 
-                                    for(var j = 0; j < schProjectId.length; j++)
+                                    for(let j = 0; j < schProjectId.length; j++)
                                     {
                                         if(projects[i] == schProjectId[j])
                                         {
-                                            var schli = document.createElement('li');
-                                            var chbx = document.createElement('input');
+                                            let schli = document.createElement('li');
+                                            let chbx = document.createElement('input');
                                             chbx.type = 'checkbox';
                                             chbx.name = schName[j];
                                             chbx.id = i;
@@ -109,13 +121,13 @@ function GetSch()
                                 $j(".ul-dropfree").find("ul").slideUp(400).parents("li").children("div.drop").css({'background-position':"0 0"});
 
 
-                                var boxes = $j("#container input:checkbox");
-                                var existingTests = new Array();
+                                let boxes = $j("#container input:checkbox");
+                                let existingTests = new Array();
                                 existingTests = ScheduleNames.value.split("\n");
 
                                 if (ScheduleNames.value != null && ScheduleIds.value != null) {
 
-                                    for (var i = 0; i < existingTests.length; i++) {
+                                    for (let i = 0; i < existingTests.length; i++) {
                                         for (j = 0; j < boxes.length; j++) {
                                             console.log(boxes[j].getAttributeNode('name').value)
                                             if (existingTests[i] == boxes[j].getAttributeNode('name').value)
@@ -126,11 +138,11 @@ function GetSch()
 
                                 $j("#container input:checkbox").on("change", function ()
                                 {
-                                var NamesArray = new Array();
-                                var IdsArray = new Array();
+                                let NamesArray = new Array();
+                                let IdsArray = new Array();
 
-                                for (var i = 0; i < boxes.length; i++) {
-                                    var box = boxes[i];
+                                for (let i = 0; i < boxes.length; i++) {
+                                    let box = boxes[i];
                                     if ($j(box).prop('checked')) {
                                         NamesArray[NamesArray.length] = $j(box).attr('name');
                                         IdsArray[IdsArray.length] = $j(box).val();
@@ -185,14 +197,15 @@ function GetSch()
                                 );
                    }
                 });
-        }
-        else
-        {
-            $j("#container input:checkbox").remove();
-            $j("#container li").remove();
-            $j("#container ul").remove();
-            $j("#container br").remove();
-            GetSch();
+            }
+            else
+            {
+                $j("#container input:checkbox").remove();
+                $j("#container li").remove();
+                $j("#container ul").remove();
+                $j("#container br").remove();
+                GetSch();
+            }
         }
     }
 

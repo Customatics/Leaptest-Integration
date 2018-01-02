@@ -80,6 +80,8 @@ public class LeapTestTeamCityBridgeRunType extends RunType {
         StringBuilder sb = new StringBuilder();
         sb.append("\nLeaptest Controller URL: ");
         sb.append(parameters.get(StringConstants.ParameterName_LeaptestControllerURL));
+        sb.append("\nAccess Key: ");
+        sb.append(parameters.get(StringConstants.ParameterName_AccessKey));
         sb.append("\nTime Delay: ");
         sb.append(parameters.get(StringConstants.ParameterName_TimeDelay));
         sb.append("\nDone Status As:");

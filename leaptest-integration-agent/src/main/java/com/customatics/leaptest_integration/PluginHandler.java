@@ -14,6 +14,7 @@ import java.net.ConnectException;
 import java.net.NoRouteToHostException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.ExecutionException;
@@ -40,14 +41,8 @@ public final class PluginHandler {
         String[] schidsArray = rawScheduleIds.split("\n|, |,");
         String[] testsArray = rawScheduleTitles.split("\n|, |,");
 
-        for(int i = 0; i < schidsArray.length; i++)
-        {
-            rawScheduleList.add(schidsArray[i]);
-        }
-        for(int i = 0; i < testsArray.length; i++)
-        {
-            rawScheduleList.add(testsArray[i]);
-        }
+        Collections.addAll(rawScheduleList, schidsArray);
+        Collections.addAll(rawScheduleList, testsArray);
 
         return rawScheduleList;
     }
@@ -74,11 +69,12 @@ public final class PluginHandler {
         String scheduleListUri = String.format(Messages.GET_ALL_AVAILABLE_SCHEDULES_URI, leaptestControllerURL);
 
         try {
-            try {
 
-                AsyncHttpClient client = new AsyncHttpClient();
+            AsyncHttpClient client = new AsyncHttpClient();
+            try
+            {
                 Response response = client.prepareGet(scheduleListUri).execute().get();
-                client = null;
+                client.close();
 
                 switch (response.getStatusCode())
                 {
@@ -162,6 +158,9 @@ public final class PluginHandler {
                 String ioExceptionMessage = String.format(Messages.IO_EXCEPTION, e.getMessage());
                 throw new Exception(ioExceptionMessage);
             }
+            finally {
+                client.close();
+            }
         }
         catch (Exception e)
         {
@@ -184,12 +183,15 @@ public final class PluginHandler {
 
         String uri = String.format(Messages.RUN_SCHEDULE_URI, leaptestAddress, scheduleId);
 
-        try {
-            try {
+        try
+        {
 
-                AsyncHttpClient client = new AsyncHttpClient();
+            AsyncHttpClient client = new AsyncHttpClient();
+            try
+            {
+
                 Response response = client.preparePut(uri).setBody("").execute().get();
-                client = null;
+                client.close();
 
                 switch (response.getStatusCode()) {
                     case 204:
@@ -261,6 +263,10 @@ public final class PluginHandler {
             {
                 throw e;
             }
+            finally
+            {
+                client.close();
+            }
         }
         catch (InterruptedException e)
         {
@@ -285,11 +291,12 @@ public final class PluginHandler {
 
         logger.error(String.format(Messages.STOPPING_SCHEDULE,scheduleTitle,scheduleId));
         String uri = String.format(Messages.STOP_SCHEDULE_URI, leaptestAddress, scheduleId);
+
+        AsyncHttpClient client = new AsyncHttpClient();
         try
         {
-            AsyncHttpClient client = new AsyncHttpClient();
             Response response = client.preparePut(uri).setBody("").execute().get();
-            client = null;
+            client.close();
 
             switch (response.getStatusCode())
             {
@@ -309,6 +316,7 @@ public final class PluginHandler {
         }
         finally
         {
+            client.close();
             return isSuccessfullyStopped;
         }
 
@@ -327,12 +335,15 @@ public final class PluginHandler {
 
         String uri = String.format(Messages.GET_SCHEDULE_STATE_URI, leaptestAddress, scheduleId);
 
-        try {
-            try {
+        try
+        {
+            AsyncHttpClient client = new AsyncHttpClient();
+            try
+            {
 
-                AsyncHttpClient client = new AsyncHttpClient();
+
                 Response response = client.prepareGet(uri).execute().get();
-                client = null;
+                client.close();
 
                 switch (response.getStatusCode()) {
                     case 200:
@@ -515,6 +526,10 @@ public final class PluginHandler {
             {
                 throw e;
             }
+            finally
+            {
+                client.close();
+            }
         }
         catch (InterruptedException e)
         {
@@ -537,10 +552,7 @@ public final class PluginHandler {
     {
         String status = Utils.defaultStringIfNull(jsonState.get("Status"), "Finished");
 
-        if (status.contentEquals("Running") || status.contentEquals("Queued"))
-            return true;
-        else
-            return false;
+        return status.contentEquals("Running") || status.contentEquals("Queued");
 
     }
 

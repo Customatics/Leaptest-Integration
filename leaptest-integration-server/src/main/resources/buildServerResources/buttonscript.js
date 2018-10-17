@@ -1,199 +1,150 @@
 
-function GetSch()
-    {
-        if(document.getElementById('container').innerHTML == "")
-        {
+function GetSch() {
+          const leapworkHostname = document.getElementById("leapworkHostname").value;
+          const leapworkPort = document.getElementById("leapworkPort").value;
 
-                $j.ajax({
-                   url: document.getElementById("LeaptestControllerURL").value + "/api/v1/runSchedules",
-                   type: 'GET',
-                   dataType:"json",
-                   success: function(json)
-                   {
-                         var container = document.getElementById("container");
-                         container.style.display='block';
+          if(!leapworkHostname || !leapworkPort)
+          {
+            alert('"hostname or/and field is empty! Cannot connect to controller!"');
+          }
+          else
+          {
+              const address = "http://" + leapworkHostname + ":" + leapworkPort;
+              const accessKey = document.getElementById("leapworkAccessKey").value;
 
-                         var schName = new Array();
-                         var schId = new Array();
-                         var schProjectId = new Array();
+              if(document.getElementById('LeapworkContainer').innerHTML == "")
+              {
 
-                         for (var i = 0; i < json.length; i++) {
-                             if (json[i].IsDisplayedInScheduleList == true) {
-                                 schId.push(json[i].Id);
-                                 schName.push(json[i].Title);
-                                 schProjectId.push(json[i].ProjectId);
-                             }
-                         }
+                  (jQuery).ajax({
+                      url: address + "/api/v3/schedules",
+                      headers: {'AccessKey': accessKey},
+                      type: 'GET',
+                      dataType:"json",
+                      success: function(json)
+                      {
+                            let container = document.getElementById("LeapworkContainer");
 
-                         var projects = new Array();
 
-                         $j.ajax({
-                            url: document.getElementById("LeaptestControllerURL").value + "/api/v1/Projects",
-                            type: 'GET',
-                            dataType: "json",
-                            success: function(projJson)
-                            {
-                                for(var i = 0; i < projJson.length; i++)
-                                    projects.push(projJson[i].Title);
-
-                                for(var i = 0; i < schProjectId.length; i++)
-                                {
-                                    for(var j = 0; j < projJson.length; j++)
-                                    {
-
-                                        if(schProjectId[i] == projJson[j].Id)
-                                        {
-                                            schProjectId[i] = projJson[j].Title;
-                                        }
-                                    }
+                            (jQuery)(document).click(function (event) {
+                                if ((jQuery)(event.target).closest('#LeapworkContainer').length == 0 && (jQuery)(event.target).attr('id') != 'mainButton') {
+                                    (jQuery)("#LeapworkContainer input:checkbox").remove();
+                                    (jQuery)("#LeapworkContainer li").remove();
+                                    (jQuery)("#LeapworkContainer ul").remove();
+                                    (jQuery)("#LeapworkContainer br").remove();
+                                    container.style.display = 'none';
                                 }
-                                projJson = null;
+                            });
 
-                                container.innerHTML += '<br>';
+                            const schul = document.createElement('ul');
+                            schul.className = 'ul-treefree ul-dropfree';
 
-                                var drpdwn = document.createElement('ul');
-                                drpdwn.className = 'ul-treefree ul-dropfree';
+                            let schName = new Array();
+                            let schId = new Array();
+                            container.innerHTML += '<br>';
 
-                                for(var i = 0; i < projects.length; i++)
-                                {
-                                    var projectli = document.createElement('li');
+                            for (let i = 0; i < json.length; i++) {
+                                    schId.push(json[i].Id);
+                                    schName.push(json[i].Title);
 
-                                    var drop = document.createElement('div');
-                                    drop.class = 'drop';
-                                    drop.style = 'background-position: 0px 0px;';
-                                    projectli.appendChild(drop);
-                                    projectli.innerHTML+=projects[i];
+                                                let schli = document.createElement('li');
+                                                let chbx = document.createElement('input');
+                                                chbx.type = 'checkbox';
+                                                chbx.name = schName[i];
+                                                chbx.id = i;
+                                                chbx.value = schId[i];
+                                                if(json[i].IsEnabled != true)
+                                                  chbx.disabled = true;
 
-                                    var schul = document.createElement('ul');
-                                    schul.style = 'display:none; font-weight: normal;';
-
-                                    for(var j = 0; j < schProjectId.length; j++)
-                                    {
-                                        if(projects[i] == schProjectId[j])
-                                        {
-                                            var schli = document.createElement('li');
-                                            var chbx = document.createElement('input');
-                                            chbx.type = 'checkbox';
-                                            chbx.name = schName[j];
-                                            chbx.id = i;
-                                            chbx.value = schId[j];
-
-                                            schli.appendChild(chbx);
-                                            schli.innerHTML+=schName[j];
-                                            schul.appendChild(schli);
-                                        }
-                                    }
-
-                                    projectli.appendChild(schul);
-                                    drpdwn.appendChild(projectli);
-                                }
-
-                                container.appendChild(drpdwn);
-                                container.innerHTML += '<br>';
-
-                                container.style.visibility = 'visible';
-
-                                $j(".ul-dropfree").find("li:has(ul)").prepend('<div class="drop"></div>');
-                                $j(".ul-dropfree div.drop").click(function()
-                                {
-                                    if ($j(this).nextAll("ul").css('display')=='none')
-                                    {
-                                        $j(this).nextAll("ul").slideDown(400);
-                                        $j(this).css({'background-position':"-11px 0"});
-                                    } else
-                                    {
-                                        $j(this).nextAll("ul").slideUp(400);
-                                        $j(this).css({'background-position':"0 0"});
-                                    }
-                                });
-                                $j(".ul-dropfree").find("ul").slideUp(400).parents("li").children("div.drop").css({'background-position':"0 0"});
-
-
-                                var boxes = $j("#container input:checkbox");
-                                var existingTests = new Array();
-                                existingTests = ScheduleNames.value.split("\n");
-
-                                if (ScheduleNames.value != null && ScheduleIds.value != null) {
-
-                                    for (var i = 0; i < existingTests.length; i++) {
-                                        for (j = 0; j < boxes.length; j++) {
-                                            console.log(boxes[j].getAttributeNode('name').value)
-                                            if (existingTests[i] == boxes[j].getAttributeNode('name').value)
-                                                $j(boxes[j]).prop('checked', 'checked');
-                                        }
-                                    }
-                                }
-
-                                $j("#container input:checkbox").on("change", function ()
-                                {
-                                var NamesArray = new Array();
-                                var IdsArray = new Array();
-
-                                for (var i = 0; i < boxes.length; i++) {
-                                    var box = boxes[i];
-                                    if ($j(box).prop('checked')) {
-                                        NamesArray[NamesArray.length] = $j(box).attr('name');
-                                        IdsArray[IdsArray.length] = $j(box).val();
-                                    }
-                                }
-                                ScheduleNames.value = NamesArray.join("\n");
-                                ScheduleIds.value = IdsArray.join("\n");
-
-                                });
-
-                                $j(document).click(function (event) {
-                                    if ($j(event.target).closest('#container').length == 0 && $j(event.target).attr('id') != 'selectButton')
-                                    {
-                                        $j("#container input:checkbox").remove();
-                                        $j("#container li").remove();
-                                        $j("#container ul").remove();
-                                        $j("#container br").remove();
-
-                                        container.style.display='none';
-                                    }
-                                });
-                            },
-                            error: function(XMLHttpRequest, textStatus, errorThrown){
-                                alert(
-                                "Error occurred! Cannot get the list of Projects!\n" +
-                                "Status: " + textStatus + "\n" +
-                                "Error: " + errorThrown + "\n" +
-                                "This may occur because of the next reasons:\n" +
-                                "1.Wrong Controller URL\n" +
-                                "2.Controller is not running or updating now, check it in services\n" +
-                                "3.Your Leaptest Controller port is blocked.\nUse 'netstat -na | find \"9000\"' command, The result should be:\n 0.0.0.0:9000  0.0.0.0:0  LISTENING\n" +
-                                "4.You are using https in controller URL, which is not supported. HTTP only!\n" +
-                                "5.Your browser has such a setting enabled that blocks any http requests from https\n" +
-                                "If nothing helps, please contact support https://leaptest.com/support"
-                                );
+                                                schli.appendChild(chbx);
+                                                schli.innerHTML+=schName[i];
+                                                schul.appendChild(schli);
                             }
-                         });
+                                     container.appendChild(schul);
+                                     container.innerHTML += '<br>';
 
-                   },
-                   error: function(XMLHttpRequest, textStatus, errorThrown){
+                                     container.style.display='block';
+
+                                     (jQuery)(".ul-dropfree").find("li:has(ul)").prepend('<div class="drop"></div>');
+                                     	(jQuery)(".ul-dropfree div.drop").click(function() {
+                                     		if ((jQuery)(this).nextAll("ul").css('display')=='none') {
+                                     			(jQuery)(this).nextAll("ul").slideDown(400);
+                                     			(jQuery)(this).css({'background-position':"-11px 0"});
+                                     		} else {
+                                     			(jQuery)(this).nextAll("ul").slideUp(400);
+                                     			(jQuery)(this).css({'background-position':"0 0"});
+                                     		}
+                                     	});
+                                     	(jQuery)(".ul-dropfree").find("ul").slideUp(400).parents("li").children("div.drop").css({'background-position':"0 0"});
+
+                                     let TestNames = document.getElementById("leapworkScheduleNames");
+                                     let TestIds = document.getElementById("leapworkScheduleIds");
+
+                                     let boxes = (jQuery)("#LeapworkContainer input:checkbox");
+                                     let existingTests = new Array();
+                                     existingTests = TestNames.value.split("\n");
+
+                                     if (TestNames.value != null && TestIds.value != null) {
+                                            for (let i = 0; i < existingTests.length; i++) {
+                                                for (let j = 0; j < boxes.length; j++)
+                                                {
+
+                                                    if (existingTests[i] == boxes[j].getAttributeNode('name').value)
+                                                     {
+                                                        if(boxes[j].disabled == false)
+                                                            (jQuery)(boxes[j]).prop('checked', 'checked');
+                                                     }
+                                                }
+                                            }
+
+                                     }
+
+                                     (jQuery)("#LeapworkContainer input:checkbox").on("change", function ()
+                                     {
+                                         let NamesArray = new Array();
+                                         let IdsArray = new Array();
+                                         for (let i = 0; i < boxes.length; i++)
+                                         {
+                                              let box = boxes[i];
+                                              if ((jQuery)(box).prop('checked'))
+                                              {
+                                                    NamesArray[NamesArray.length] = (jQuery)(box).attr('name');
+                                                    IdsArray[IdsArray.length] = (jQuery)(box).val();
+                                              }
+                                         }
+                                         TestNames.value = NamesArray.join("\n");
+                                         TestIds.value = IdsArray.join("\n");
+                                         console.log(TestIds.value)
+                                     });
+
+                      },
+                      error: function(XMLHttpRequest, textStatus, errorThrown)
+                      {
                                 alert(
-                                "Error occurred! Cannot get the list of Projects!\n" +
+                                "Error occurred! Cannot get the list of Schedules!\n" +
                                 "Status: " + textStatus + "\n" +
                                 "Error: " + errorThrown + "\n" +
                                 "This may occur because of the next reasons:\n" +
-                                "1.Wrong Controller URL\n" +
-                                "2.Controller is not running or updating now, check it in services\n" +
-                                "3.Your Leaptest Controller port is blocked.\nUse 'netstat -na | find \"9000\"' command, The result should be:\n 0.0.0.0:9000  0.0.0.0:0  LISTENING\n" +
-                                "4.You are using https in controller URL, which is not supported. HTTP only!\n" +
-                                "5.Your browser has such a setting enabled that blocks any http requests from https\n" +
-                                "If nothing helps, please contact support https://leaptest.com/support"
+                                "1.Invalid controller hostname\n" +
+                                "2.Invalid port number\n" +
+                                "3.Invalid access key\n" +
+                                "4.Controller is not running or updating now, check it in services\n" +
+                                "5.Your Leapwork Controller API port is blocked.\nUse 'netstat -na | find \"9001\"' command, The result should be:\n 0.0.0.0:9001  0.0.0.0:0  LISTENING\n" +
+                                "6.Your browser has such a setting enabled that blocks any http requests from https\n" +
+                                "If nothing helps, please contact support https://leapwork.com/support"
                                 );
-                   }
-                });
-        }
-        else
-        {
-            $j("#container input:checkbox").remove();
-            $j("#container li").remove();
-            $j("#container ul").remove();
-            $j("#container br").remove();
-            GetSch();
-        }
+                      }
+                  });
+              }
+              else
+              {
+                  (jQuery)("#LeapworkContainer input:checkbox").remove();
+                  (jQuery)("#LeapworkContainer li").remove();
+                  (jQuery)("#LeapworkContainer ul").remove();
+                  (jQuery)("#LeapworkContainer br").remove();
+                  GetSch();
+              }
+
+          }
     }
 
 

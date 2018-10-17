@@ -29,13 +29,13 @@ public class LeapTestTeamCityBridgeRunType extends RunType {
     @NotNull
     @Override
     public String getDisplayName() {
-        return "Leaptest Integration";
+        return "Leapwork Integration";
     }
 
     @NotNull
     @Override
     public String getDescription() {
-        return "Integrates Leaptest codeless test automation with Teamcity. Run tests, get results, generate reports.";
+        return "Integrates Leapwork codeless test automation with Teamcity. Run tests, get results, generate reports.";
     }
 
     @Override
@@ -63,6 +63,7 @@ public class LeapTestTeamCityBridgeRunType extends RunType {
         HashMap<String, String> defaults = new HashMap<String, String>();
         defaults.put(StringConstants.ParameterName_DoneStatus, "Failed");
         defaults.put(StringConstants.ParameterName_TimeDelay,"3");
+        defaults.put(StringConstants.ParameterName_Port,"9001");
         return defaults;
     }
 
@@ -78,8 +79,12 @@ public class LeapTestTeamCityBridgeRunType extends RunType {
     @Override
     public String describeParameters(@NotNull Map<String, String> parameters) {
         StringBuilder sb = new StringBuilder();
-        sb.append("\nLeaptest Controller URL: ");
-        sb.append(parameters.get(StringConstants.ParameterName_LeaptestControllerURL));
+        sb.append("\nLeapwork Controller Host: ");
+        sb.append(parameters.get(StringConstants.ParameterName_Hostname));
+        sb.append("\nLeapwork Controller Port: ");
+        sb.append(parameters.get(StringConstants.ParameterName_Port));
+        sb.append("\nAccess Key: ");
+        sb.append(parameters.get(StringConstants.ParameterName_AccessKey));
         sb.append("\nTime Delay: ");
         sb.append(parameters.get(StringConstants.ParameterName_TimeDelay));
         sb.append("\nDone Status As:");

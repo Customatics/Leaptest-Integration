@@ -5,7 +5,9 @@
 
       <div class="parameter">
 
-          Leaptest controller URL: <strong><props:displayValue name="${constants.ParameterName_LeaptestControllerURL}" /></strong>
+          Leapwork controller hostname: <strong><props:displayValue name="${constants.ParameterName_Hostname}" /></strong>
+          Leapwork controller port: <strong><props:displayValue name="${constants.ParameterName_Port}" /></strong>
+          Access key: <strong><props:displayValue name="${constants.ParameterName_AccessKey}" /></strong>
           Time Delay (in seconds): <strong><props:displayValue name="${constants.ParameterName_TimeDelay}" /></strong>
           Done status value: <strong><props:displayValue name="${constants.ParameterName_DoneStatus}" /></strong>
           Schedule Names: <strong><props:displayValue name="${constants.ParameterName_ScheduleNames}" emptyValue="${constants.ParameterName_ScheduleNames}"/></strong>

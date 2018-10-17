@@ -14,18 +14,34 @@
 <l:settingsGroup title="Runner Parameters">
 
         <tr>
-                <th><label>LeapTest Controller URL:</label></th>
+                <th><label>Leapwork Controller Hostname:</label></th>
                 <td>
-                    <props:textProperty name="${constants.parameterName_LeaptestControllerURL}" className="longField"/>
-                    <span class="smallNote">URL of your LeapTest Controller</span>
-                    <span class="error" id="error_${constants.parameterName_LeaptestControllerURL}"></span></td>
+                    <props:textProperty name="${constants.parameterName_Hostname}" className="longField"/>
+                    <span class="smallNote">Leapwork controller hostname</span>
+                    <span class="error" id="error_${constants.parameterName_Hostname}"></span></td>
                 </td>
+        </tr>
+         <tr>
+                <th><label>Leapwork Controller Port:</label></th>
+                    <td>
+                            <props:textProperty name="${constants.parameterName_Port}" className="longField"/>
+                            <span class="smallNote">Leapwork controller port</span>
+                            <span class="error" id="error_${constants.parameterName_Port}"></span></td>
+                    </td>
+         </tr>
+          <tr>
+                <th><label>Access Key:</label></th>
+                    <td>
+                            <props:textProperty name="${constants.parameterName_AccessKey}" className="longField"/>
+                            <span class="smallNote">Access key</span>
+                            <span class="error" id="error_${constants.parameterName_AccessKey}"></span></td>
+                    </td>
         </tr>
          <tr>
               <th><label>Time Delay (in seconds):</label></th>
               <td>
                    <props:textProperty name="${constants.parameterName_TimeDelay}" className="longField"/>
-                   <span class="smallNote">How much time to wait before trying to get schedule state. If schedule is still running, plugin will wait again! By default it is 3 seconds.</span>
+                   <span class="smallNote">How much time to wait before trying to get schedule state. If schedule is still running, plugin will wait again! By default it is 5 seconds.</span>
                    <span class="error" id="error_${constants.parameterName_TimeDelay}"></span></td>
               </td>
          </tr>
@@ -60,7 +76,7 @@
                     Press button "Select Schedules" and get all available schedules to run grouped by projects!
                 </span>
                 <input type="button" class="btn btn-mini" id="selectButton" value="Select Schedules" onclick="GetSch()" style="position:relative; top: -100px; left: 430px;"/>
-                <div id="container" class="popupDiv" style="display:none; position:absolute; top: 60px; left: 435px; min-width:250px; max-width:500px"></div>
+                <div id="LeapworkContainer" class="popupDiv" style="display:none; position:absolute; top: 60px; left: 435px; min-width:250px; max-width:500px"></div>
             </td>
         </tr>
         <tr style="display:none">
@@ -107,9 +123,9 @@
 
     head.appendChild(style);
 
-     var schtextarea = document.getElementById("ScheduleIds");
+     var schtextarea = document.getElementById("leapworkScheduleIds");
          schtextarea.readOnly='true';
-     var teststextarea = document.getElementById("ScheduleNames");
+     var teststextarea = document.getElementById("leapworkScheduleNames");
          teststextarea.readOnly='true';
    };
 </script>

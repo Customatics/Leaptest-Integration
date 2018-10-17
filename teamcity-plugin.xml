@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <teamcity-plugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:schemas-jetbrains-com:teamcity-plugin-v1-xml">
   <info>
-    <name>Leaptest Integration</name>
-    <display-name>Leaptest Integration</display-name>
-    <version>1.2.1</version>
-    <description>Integrates Leaptest codeless test automation with Teamcity. Run tests, get results, generate reports.</description>
+    <name>Leapwork Integration</name>
+    <display-name>Leapwork Integration</display-name>
+    <version>3.0.0</version>
+    <description>Integrates Leapwork codeless test automation with Teamcity. Run tests, get results, generate reports.</description>
     <download-url>https://github.com/Customatics/Leaptest-Integration/archive/master.zip</download-url>
     <email>app@customatics.com</email>
     <vendor>

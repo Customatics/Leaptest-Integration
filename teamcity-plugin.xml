@@ -3,7 +3,7 @@
   <info>
     <name>Leapwork Integration</name>
     <display-name>Leapwork Integration</display-name>
-    <version>3.0.0</version>
+    <version>3.1.0</version>
     <description>Integrates Leapwork codeless test automation with Teamcity. Run tests, get results, generate reports.</description>
     <download-url>https://github.com/Customatics/Leaptest-Integration/archive/master.zip</download-url>
     <email>app@customatics.com</email>

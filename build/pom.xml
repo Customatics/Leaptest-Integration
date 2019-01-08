@@ -4,7 +4,7 @@
   <parent>
     <artifactId>leaptest-integration</artifactId>
     <groupId>com.customatics</groupId>
-    <version>3.0.0</version>
+    <version>3.1.0</version>
   </parent>
   <artifactId>build</artifactId>
   <packaging>pom</packaging>
@@ -18,17 +18,17 @@
       <dependency>
            <groupId>com.customatics</groupId>
            <artifactId>leaptest-integration-agent</artifactId>
-           <version>3.0.0</version>
+           <version>3.1.0</version>
       </dependency>
       <dependency>
            <groupId>com.customatics</groupId>
            <artifactId>leaptest-integration-common</artifactId>
-           <version>3.0.0</version>
+           <version>3.1.0</version>
       </dependency>
       <dependency>
            <groupId>com.customatics</groupId>
            <artifactId>leaptest-integration-server</artifactId>
-           <version>3.0.0</version>
+           <version>3.1.0</version>
       </dependency>
   </dependencies>
   <build>

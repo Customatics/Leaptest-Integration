@@ -1,8 +1,6 @@
 package com.customatics.leaptest_integration;
 
-/**
- * Created by User on 02.05.2017.
- */
+
 public final class Messages {
 
     public static final String SCHEDULE_FORMAT = "%1$s[%2$s]";
@@ -18,6 +16,7 @@ public final class Messages {
     public static final String NO_SUCH_RUN = "No such run %1$s !";
 
     public static final String SCHEDULE_CONSOLE_LOG_SEPARATOR = "----------------------------------------------------------------------------------------";
+    public static final String CASE_CONSOLE_LOG_SEPARATOR = "----------------------------------------------------------------------------------------";
 
     public static final String CASE_INFORMATION = "RunItem: %1$s | Status: %2$s | Elapsed: %3$s";
     public static final String CASE_STACKTRACE_FORMAT = "%1$s - %2$s";
@@ -30,6 +29,8 @@ public final class Messages {
     public static final String GET_RUN_STATUS_URI = "%1$s/api/v3/run/%2$s/status";
     public static final String GET_RUN_ITEMS_IDS_URI = "%1$s/api/v3/run/%2$s/runItemIds";
     public static final String GET_RUN_ITEM_URI = "%1$s/api/v3/runItems/%2$s";
+    public static final String GET_RUN_ITEM_KEYFRAMES_URI = "%1$s/api/v3/runItems/%2$s/keyframes";
+
 
     public static final String INVALID_SCHEDULES = "INVALID SCHEDULES";
     public static final String PLUGIN_NAME = "Leapwork Integration";
@@ -49,12 +50,7 @@ public final class Messages {
     public static final String INTERRUPTED_EXCEPTION = "Interrupted exception: %1$s!";
     public static final String EXECUTION_EXCEPTION = "Execution exception: %1$s!";
     public static final String IO_EXCEPTION = "I/O exception: %1$s!";
-    public static final String EXCEPTION = "Exception: %1$s!";
-    public static final String CACHE_TIMEOUT_EXCEPTION = "Cache time out exception has occurred! This schedule will be run later";
 
-    public static final String LICENSE_EXPIRED = "Your Leapwork license has expired. Please contact support https://leapwork.com/support";
-
-    public static final String SCHEDULE_IS_STILL_RUNNING = "Schedule %1$s[%2$s] is still running!";
 
     public static final String STOPPING_RUN = "Stopping schedule %1$s run %2$s!";
 
@@ -75,5 +71,17 @@ public final class Messages {
     public static final String TIME_DELAY_NUMBER_IS_INVALID = "Time delay number is invalid, setting to default %1$s";
 
     public static final String SCHEDULE_DISABLED = "Schedule %1$s[%2$s] is disabled!";
+
+    public static final String INPUT_VALUES_MESSAGE = "LeapWork Plugin input parameters:";
+    public static final String INPUT_HOSTNAME_VALUE = "LEAPWORK controller hostname: %1$s";
+    public static final String INPUT_PORT_VALUE = "LEAPWORK controller port: %1$s";
+    public static final String INPUT_ACCESS_KEY_VALUE = "LEAPWORK controller Access Key: %1$s";
+    public static final String INPUT_SCHEDULE_NAMES_VALUE = "Schedule names: %1$s";
+    public static final String INPUT_SCHEDULE_IDS_VALUE = "Schedule ids: %1$s";
+    public static final String INPUT_DELAY_VALUE = "Delay between status checks: %1$s";
+    public static final String INPUT_DONE_VALUE = "Done Status As: %1$s";
+    public static final String INPUT_CONTROLLER_URL = "LEAPWORK Controller URL: %1$b";
+
+    public static final String FAILED_TO_PARSE_RESPONSE_KEYFRAME_JSON_ARRAY = "Failed to parse response keyframe json array";
 
 }

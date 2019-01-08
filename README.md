@@ -19,8 +19,9 @@ LEAPWORK is a mighty automation testing system and now it can be used for runnin
 - If you have an earlier version of the plugin in the directory, remove it.
 - Alternatively, use the Administration -> Plugins List page to upload the zip plugin package into the directory (do not change the file name of the plugin). Restart the TeamCity server (Services -> Teamcity Server -> Restart). Check the installed plugin version is listed on the Administration -> Plugins List page.
 
-# Version 3.0.0 release
-- For Leapwork version 2018.1.200
+# Update 3.1.0
+- For LEAPWORK version 2018.2.262
+- Fixed bug when JUnit parser interpreted all flows as "Failed"
 - Uses new Leapwork v3 API, API v2 is not supported
 
 # Instruction

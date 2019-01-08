@@ -22,7 +22,7 @@ function GetSch() {
                       dataType:"json",
                       success: function(json)
                       {
-                            let container = document.getElementById("LeapworkContainer");
+                            const container = document.getElementById("LeapworkContainer");
 
 
                             (jQuery)(document).click(function (event) {
@@ -42,22 +42,35 @@ function GetSch() {
                             let schId = new Array();
                             container.innerHTML += '<br>';
 
-                            for (let i = 0; i < json.length; i++) {
-                                    schId.push(json[i].Id);
-                                    schName.push(json[i].Title);
+                            for (let i = 0; i < json.length; i++)
+                            {
+                                schId.push(json[i].Id);
+                                schName.push(json[i].Title);
 
-                                                let schli = document.createElement('li');
-                                                let chbx = document.createElement('input');
-                                                chbx.type = 'checkbox';
-                                                chbx.name = schName[i];
-                                                chbx.id = i;
-                                                chbx.value = schId[i];
-                                                if(json[i].IsEnabled != true)
-                                                  chbx.disabled = true;
+                                let schli = document.createElement('li');
+                                let chbx = document.createElement('input');
+                                chbx.type = 'checkbox';
+                                chbx.name = schName[i];
+                                chbx.id = i;
+                                chbx.value = schId[i];
 
-                                                schli.appendChild(chbx);
-                                                schli.innerHTML+=schName[i];
-                                                schul.appendChild(schli);
+                                if(json[i].IsEnabled != true)
+                                {
+                                    chbx.disabled = true;
+                                    schli.appendChild(chbx);
+                                    schli.innerHTML+=schName[i].strike().italics().fontcolor("gray");
+                                }
+                                else
+                                {
+                                    schli.appendChild(chbx);
+                                    schli.innerHTML+=schName[i];
+                                }
+
+
+                                if(json[i].Type === "ScheduleInfo")
+                                     schul.appendChild(schli);
+
+
                             }
                                      container.appendChild(schul);
                                      container.innerHTML += '<br>';

@@ -56,13 +56,26 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
         final String leapworkSchIds = getParameter(StringConstants.ParameterName_ScheduleIds);
         final String leapworkSchNames = getParameter(StringConstants.ParameterName_ScheduleNames);
 
+        logger.message(Messages.INPUT_VALUES_MESSAGE);
+        logger.message(Messages.CASE_CONSOLE_LOG_SEPARATOR);
+        logger.message(String.format(Messages.INPUT_HOSTNAME_VALUE,leapworkHostname));
+        logger.message(String.format(Messages.INPUT_PORT_VALUE,leapworkPort));
+        String controllerApiHttpAddress = pluginHandler.getControllerApiHttpAdderess(leapworkHostname, leapworkPort, logger);
+        logger.message(String.format(Messages.INPUT_CONTROLLER_URL,controllerApiHttpAddress));
+        logger.message(String.format(Messages.INPUT_ACCESS_KEY_VALUE,leapworkAccessKey));
+        logger.message(String.format(Messages.INPUT_SCHEDULE_NAMES_VALUE,leapworkSchNames));
+        logger.message(String.format(Messages.INPUT_SCHEDULE_IDS_VALUE,leapworkSchIds));
+        logger.message(String.format(Messages.INPUT_DELAY_VALUE,leapworkDelay));
+        logger.message(String.format(Messages.INPUT_DONE_VALUE,leapworkDoneStatusAs));
+
+
         ArrayList<InvalidSchedule> invalidSchedules = new ArrayList<>();
         final HashMap<String,Integer> repeatedNameMapCounter = new HashMap<>();
 
         ArrayList<String> rawScheduleList = pluginHandler.getRawScheduleList(leapworkSchIds, leapworkSchNames);
-        String controllerApiHttpAddress = pluginHandler.getControllerApiHttpAdderess(leapworkHostname, leapworkPort, logger);
 
         int timeDelay = pluginHandler.getTimeDelay(leapworkDelay, logger);
+        boolean isDoneStatusAsSuccess = leapworkDoneStatusAs.contentEquals("Success");
 
         AsyncHttpClient mainClient = new AsyncHttpClient();
         try{
@@ -88,7 +101,7 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
                 UUID runId = pluginHandler.runSchedule(mainClient,controllerApiHttpAddress, leapworkAccessKey, schId, schTitle, logger);
                 if(runId != null)
                 {
-                    CollectScheduleRunResults(controllerApiHttpAddress, leapworkAccessKey,runId,schTitle,timeDelay,leapworkDoneStatusAs, logger,repeatedNameMapCounter);
+                    CollectScheduleRunResults(controllerApiHttpAddress, leapworkAccessKey,runId,schTitle,timeDelay,isDoneStatusAsSuccess, logger,repeatedNameMapCounter);
                 }
                 else
                     invalidSchedules.add(new InvalidSchedule(schTitle,String.format(Messages.SCHEDULE_RUN_FAILURE,schTitle,schId)));
@@ -136,7 +149,7 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
         }
     }
 
-    private static void CollectScheduleRunResults(String controllerApiHttpAddress, String accessKey, UUID runId, String scheduleName, int timeDelay,String doneStatusAs,final BuildProgressLogger logger, HashMap<String,Integer> repeatedNameMapCounter) throws InterruptedException {
+    private static void CollectScheduleRunResults(String controllerApiHttpAddress, String accessKey, UUID runId, String scheduleName, int timeDelay,boolean isDoneStatusAsSuccess,final BuildProgressLogger logger, HashMap<String,Integer> repeatedNameMapCounter) throws InterruptedException {
 
         logger.logSuiteStarted(scheduleName);
         List<UUID> runItemsId = new ArrayList<>();
@@ -162,7 +175,7 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
                 for(ListIterator<UUID> iter = executedRunItems.listIterator(); iter.hasNext();)
                 {
                     UUID runItemId = iter.next();
-                    RunItem runItem = pluginHandler.getRunItem(client,controllerApiHttpAddress,accessKey,runItemId, scheduleName,logger );
+                    RunItem runItem = pluginHandler.getRunItem(client,controllerApiHttpAddress,accessKey,runItemId, scheduleName,isDoneStatusAsSuccess,logger );
 
                     String status = runItem.getCaseStatus();
 
@@ -198,7 +211,7 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
                         case"Done":
                             String doneFlowTitle  = pluginHandler.correctRepeatedTitles(repeatedNameMapCounter,runItem.getCaseName());
                             logger.logTestStarted(doneFlowTitle);
-                            if(doneStatusAs.contentEquals("Success") == false)
+                            if(isDoneStatusAsSuccess == false)
                             {
                                 logger.logTestFailed(doneFlowTitle,runItem.failure.getMessage(),null);
                             }

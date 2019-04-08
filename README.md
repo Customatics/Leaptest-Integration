@@ -17,12 +17,16 @@ LEAPWORK is a mighty automation testing system and now it can be used for runnin
 - Command: mvn package 
 - Or simply install zip-file from the "target" folder: Copy the zip plugin package into the {TeamCity Data Directory}/plugins directory (Default path: C:\ProgramData\JetBrains\TeamCity\plugins). 
 - If you have an earlier version of the plugin in the directory, remove it.
-- Alternatively, use the Administration -> Plugins List page to upload the zip plugin package into the directory (do not change the file name of the plugin). Restart the TeamCity server (Services -> Teamcity Server -> Restart). Check the installed plugin version is listed on the Administration -> Plugins List page.
+- Alternatively, use the Administration -> Plugins List -> Upload plugin zip -> Choose File -> Choose that zip-file -> Press Upload plugin zip
 
-# Update 3.1.0
-- For LEAPWORK version 2018.2.262
-- Fixed bug when JUnit parser interpreted all flows as "Failed"
-- Uses new Leapwork v3 API, API v2 is not supported
+# Update 3.1.1
+- For LEAPWORK version 2018.2.301
+- Fixed bug when schedules are executing in non-ordered way.
+- Now it is possible to insert a list of schedules to "Schedule Names" text box. List of names must be new line or comma separated.
+  Be noticed that by clicking on any checkbox with schedule to select, using "Select Schedules" button, all non-existing or disabled schedules will be removed from "Schedule names" text box.
+- Added "Schedule variables" non-mandatory field. Schedule variables must be listed in "key : value" way and separated by new line or comma.
+  Be noticed that all the schedules will be run with this list of variables.
+- Boolean field "leapworkWritePassedFlowKeyFrames" is not mandatory anymore.
 
 # Instruction
 1. Add Build-Step "Leapwork Integration" to your project.
@@ -37,10 +41,9 @@ LEAPWORK is a mighty automation testing system and now it can be used for runnin
 - If you catch an error "No such run [runId]!" after schedule starting, increase time delay parameter.
 
 # Screenshots
-![ScreenShot](http://customatics.com/wp-content/uploads/2017/03/tc-config.png)
-![ScreenShot](http://customatics.com/wp-content/uploads/2017/03/tc-report-overview.png)
-![ScreenShot](http://customatics.com/wp-content/uploads/2017/03/tc-report-cases.png)
-![ScreenShot](http://customatics.com/wp-content/uploads/2017/03/tc-report-build_log.png)
-![ScreenShot](http://customatics.com/wp-content/uploads/2017/03/tc-report-overview-exceptions.png)
+![ScreenShot](https://github.com/Customatics/Leaptest-Integration/tree/master/leaptest-integration-agent/src/main/resources/images/input.png)
+![ScreenShot](https://github.com/Customatics/Leaptest-Integration/tree/master/leaptest-integration-agent/src/main/resources/images/overview.png)
+![ScreenShot](https://github.com/Customatics/Leaptest-Integration/tree/master/leaptest-integration-agent/src/main/resources/images/tests.png)
+![ScreenShot](https://github.com/Customatics/Leaptest-Integration/tree/master/leaptest-integration-agent/src/main/resources/images/log.png)
 
 

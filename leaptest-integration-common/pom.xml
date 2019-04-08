@@ -4,7 +4,7 @@
   <parent>
     <artifactId>leaptest-integration</artifactId>
     <groupId>com.customatics</groupId>
-    <version>3.1.0</version>
+    <version>3.1.1</version>
   </parent>
   <artifactId>leaptest-integration-common</artifactId>
   <packaging>jar</packaging>

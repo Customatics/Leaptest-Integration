@@ -38,6 +38,15 @@
                     </td>
         </tr>
          <tr>
+               <th><label>Report File:</label></th>
+                   <td>
+                           <props:textProperty name="${constants.parameterName_Report}" className="longField"/>
+                           <span class="smallNote">Report file name</span>
+                           <span class="error" id="error_${constants.parameterName_Report}"></span></td>
+                   </td>
+         </tr>
+
+         <tr>
               <th><label>Time Delay (in seconds):</label></th>
               <td>
                    <props:textProperty name="${constants.parameterName_TimeDelay}" className="longField"/>
@@ -59,6 +68,33 @@
                      </props:selectProperty>
                  </td>
          </tr>
+         <tr>
+                 <th></th>
+                     <td>
+                             <props:checkboxProperty name="${constants.parameterName_PassedKeyframes}" />
+                              <label for="${constants.parameterName_PassedKeyframes}">Write keyframes for passed flows to report?</label>
+                             <span class="error" id="error_${constants.parameterName_PassedKeyframes}"></span></td>
+                     </td>
+         </tr>
+         <tr>
+
+             <th><label for="${constants.parameterName_ScheduleVariables}">Schedule Variables:</label></th>
+             <td style="position:relative;">
+
+                 <props:multilineProperty
+                         name="${constants.parameterName_ScheduleVariables}"
+                         className="longField"
+                         linkTitle="Schedule Variables"
+                         rows="3"
+                         cols="49"
+                         expanded="${true}"/>
+                 <span class="error" id="error_${constants.parameterName_ScheduleVariables}"></span>
+                 <span class="smallNote">
+                     Input Schedule Variables
+                 </span>
+             </td>
+         </tr>
+
         <tr>
 
             <th><label for="${constants.parameterName_ScheduleNames}">Schedule Names:</label></th>
@@ -125,7 +161,6 @@
 
      var schtextarea = document.getElementById("leapworkScheduleIds");
          schtextarea.readOnly='true';
-     var teststextarea = document.getElementById("leapworkScheduleNames");
-         teststextarea.readOnly='true';
+
    };
 </script>

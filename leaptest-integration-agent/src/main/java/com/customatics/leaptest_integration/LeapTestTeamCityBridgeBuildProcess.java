@@ -3,13 +3,12 @@ package com.customatics.leaptest_integration;
 import com.ning.http.client.AsyncHttpClient;
 import jetbrains.buildServer.agent.*;
 import jetbrains.buildServer.util.StringUtil;
+import org.aspectj.bridge.AbortException;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -55,33 +54,28 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
         String leapworkDoneStatusAs = getParameter(StringConstants.ParameterName_DoneStatus);
         final String leapworkSchIds = getParameter(StringConstants.ParameterName_ScheduleIds);
         final String leapworkSchNames = getParameter(StringConstants.ParameterName_ScheduleNames);
+        String leapworkReport = getParameter(StringConstants.ParameterName_Report);
+        String leapworkPassedKeyframes = getParameter(StringConstants.ParameterName_PassedKeyframes);
+        String leapworkScheduleVariables = getParameter(StringConstants.ParameterName_ScheduleVariables);
 
-        logger.message(Messages.INPUT_VALUES_MESSAGE);
-        logger.message(Messages.CASE_CONSOLE_LOG_SEPARATOR);
-        logger.message(String.format(Messages.INPUT_HOSTNAME_VALUE,leapworkHostname));
-        logger.message(String.format(Messages.INPUT_PORT_VALUE,leapworkPort));
         String controllerApiHttpAddress = pluginHandler.getControllerApiHttpAdderess(leapworkHostname, leapworkPort, logger);
-        logger.message(String.format(Messages.INPUT_CONTROLLER_URL,controllerApiHttpAddress));
-        logger.message(String.format(Messages.INPUT_ACCESS_KEY_VALUE,leapworkAccessKey));
-        logger.message(String.format(Messages.INPUT_SCHEDULE_NAMES_VALUE,leapworkSchNames));
-        logger.message(String.format(Messages.INPUT_SCHEDULE_IDS_VALUE,leapworkSchIds));
-        logger.message(String.format(Messages.INPUT_DELAY_VALUE,leapworkDelay));
-        logger.message(String.format(Messages.INPUT_DONE_VALUE,leapworkDoneStatusAs));
-
-
         ArrayList<InvalidSchedule> invalidSchedules = new ArrayList<>();
         final HashMap<String,Integer> repeatedNameMapCounter = new HashMap<>();
 
         ArrayList<String> rawScheduleList = pluginHandler.getRawScheduleList(leapworkSchIds, leapworkSchNames);
 
         int timeDelay = pluginHandler.getTimeDelay(leapworkDelay, logger);
-        boolean isDoneStatusAsSuccess = leapworkDoneStatusAs.contentEquals("Success");
+        String reportFileName = pluginHandler.getReportFileName(leapworkReport, "report.xml");
+        boolean isDoneStatusAsSuccess = pluginHandler.isDoneStatusAsSuccess(leapworkDoneStatusAs);
+        boolean writePassedKeyframes = Utils.defaultBooleanIfNull(leapworkPassedKeyframes,false);
+
+        String scheduleVariablesRequestPart = pluginHandler.getScheduleVariablesRequestPart(leapworkScheduleVariables, logger);
 
         AsyncHttpClient mainClient = new AsyncHttpClient();
         try{
 
             //Get schedule titles (or/and ids in case of pipeline)
-            HashMap<UUID, String> schedulesIdTitleHashMap = pluginHandler.getSchedulesIdTitleHashMap(mainClient, leapworkAccessKey, controllerApiHttpAddress,rawScheduleList, logger,invalidSchedules);
+            LinkedHashMap<UUID, String> schedulesIdTitleHashMap = pluginHandler.getSchedulesIdTitleHashMap(mainClient, leapworkAccessKey, controllerApiHttpAddress,rawScheduleList, logger,invalidSchedules);
             rawScheduleList.clear();//don't need that anymore
 
             if(schedulesIdTitleHashMap.isEmpty())
@@ -90,6 +84,7 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
             }
 
             List<UUID> schIdsList = new ArrayList<>(schedulesIdTitleHashMap.keySet());
+            LinkedHashMap<UUID, LeapworkRun> resultsMap = new LinkedHashMap<>();
 
             ListIterator<UUID> iter = schIdsList.listIterator();
             while( iter.hasNext())
@@ -97,60 +92,100 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
 
                 UUID schId = iter.next();
                 String schTitle = schedulesIdTitleHashMap.get(schId);
+                LeapworkRun run  = new LeapworkRun(schId.toString(),schTitle);
 
-                UUID runId = pluginHandler.runSchedule(mainClient,controllerApiHttpAddress, leapworkAccessKey, schId, schTitle, logger);
+                UUID runId = pluginHandler.runSchedule(mainClient,controllerApiHttpAddress, leapworkAccessKey, schId, schTitle, logger, run, scheduleVariablesRequestPart);
                 if(runId != null)
                 {
-                    CollectScheduleRunResults(controllerApiHttpAddress, leapworkAccessKey,runId,schTitle,timeDelay,isDoneStatusAsSuccess, logger,repeatedNameMapCounter);
+                    resultsMap.put(runId, run);
+                    CollectScheduleRunResults(controllerApiHttpAddress, leapworkAccessKey,runId,schTitle,timeDelay,isDoneStatusAsSuccess, writePassedKeyframes, run, logger, repeatedNameMapCounter);
                 }
                 else
-                    invalidSchedules.add(new InvalidSchedule(schTitle,String.format(Messages.SCHEDULE_RUN_FAILURE,schTitle,schId)));
+                    resultsMap.put(UUID.randomUUID(),run);
 
                 iter.remove();
             }
 
             schIdsList.clear();
             schedulesIdTitleHashMap.clear();
+            RunCollection buildResult = new RunCollection();
+
 
             if (invalidSchedules.size() > 0)
             {
                 logger.message(Messages.INVALID_SCHEDULES);
 
-                Date errorDate = new Date();
-                logger.logSuiteStarted(Messages.INVALID_SCHEDULES);
-
                 for (InvalidSchedule invalidSchedule : invalidSchedules)
                 {
-                    logger.message(invalidSchedule.getName());
-                    logger.logTestStarted(invalidSchedule.getName(), errorDate);
-                    logger.logTestFailed(invalidSchedule.getName(),  invalidSchedule.getStackTrace(), null);
-                    logger.logTestFinished(invalidSchedule.getName(), errorDate);
+                    logger.warning(String.format("%1$s: %2$s",invalidSchedule.getName(),invalidSchedule.getStackTrace()));
+                    LeapworkRun notFoundSchedule = new LeapworkRun(invalidSchedule.getName());
+                    RunItem invalidRunItem = new RunItem("Error","Error",0,invalidSchedule.getStackTrace(),invalidSchedule.getName());
+                    notFoundSchedule.runItems.add(invalidRunItem);
+                    notFoundSchedule.setError(invalidSchedule.getStackTrace());
+                    buildResult.leapworkRuns.add(notFoundSchedule);
                 }
 
-                logger.logSuiteFinished(Messages.INVALID_SCHEDULES);
+            }
+            List<LeapworkRun> resultRuns = new ArrayList<>(resultsMap.values());
+            logger.warning(Messages.TOTAL_SEPARATOR);
+
+            for (LeapworkRun run : resultRuns)
+            {
+                buildResult.leapworkRuns.add(run);
+
+                buildResult.addFailedTests(run.getFailed());
+                buildResult.addPassedTests(run.getPassed());
+                buildResult.addErrors(run.getErrors());
+                run.setTotal(run.getPassed() + run.getFailed());
+                buildResult.addTotalTime(run.getTime());
+                logger.warning(String.format(Messages.SCHEDULE_TITLE,run.getScheduleTitle(),run.getScheduleId()));
+                logger.warning(String.format(Messages.CASES_PASSED,run.getPassed()));
+                logger.warning(String.format(Messages.CASES_FAILED,run.getFailed()));
+                logger.warning(String.format(Messages.CASES_ERRORED,run.getErrors()));
+            }
+            buildResult.setTotalTests(buildResult.getFailedTests() + buildResult.getPassedTests());
+
+            logger.warning(Messages.TOTAL_SEPARATOR);
+            logger.warning(String.format(Messages.TOTAL_CASES_PASSED,buildResult.getPassedTests()));
+            logger.warning(String.format(Messages.TOTAL_CASES_FAILED,buildResult.getFailedTests()));
+            logger.warning(String.format(Messages.TOTAL_CASES_ERROR,buildResult.getErrors()));
+
+            File reportFile = pluginHandler.createJUnitReport(context, reportFileName, logger, buildResult);
+
+            if (buildResult.getErrors() > 0 || buildResult.getFailedTests() > 0 || invalidSchedules.size() > 0) {
+                if(buildResult.getErrors() > 0)
+                    logger.warning(Messages.ERROR_NOTIFICATION);
+                logger.warning("FAILURE");
+                status = BuildFinishedStatus.FINISHED_FAILED;
+            }
+            else {
+                logger.warning("SUCCESS");
+                status =BuildFinishedStatus.FINISHED_SUCCESS;
             }
 
-            logger.message(Messages.PLUGIN_SUCCESSFUL_FINISH);
+            logger.warning(Messages.PLUGIN_SUCCESSFUL_FINISH);
 
         }
-        catch (InterruptedException | CancellationException e)
+        catch (InterruptedException e)
         {
             logger.error("INTERRUPTED");
             status = BuildFinishedStatus.INTERRUPTED;
+            logger.error(Messages.PLUGIN_ERROR_FINISH);
         }
-        catch (Exception e){
+        catch (Exception e)
+        {
+            logger.error(Messages.PLUGIN_ERROR_FINISH);
             logger.error(e.getMessage());
-            logger.message(Messages.PLUGIN_ERROR_FINISH);
-            status = BuildFinishedStatus.FINISHED_WITH_PROBLEMS;
             logger.error(Messages.PLEASE_CONTACT_SUPPORT);
+            logger.error("FAILURE");
+            status = BuildFinishedStatus.FINISHED_FAILED;
         } finally {
             mainClient.close();
             return status;
         }
     }
 
-    private static void CollectScheduleRunResults(String controllerApiHttpAddress, String accessKey, UUID runId, String scheduleName, int timeDelay,boolean isDoneStatusAsSuccess,final BuildProgressLogger logger, HashMap<String,Integer> repeatedNameMapCounter) throws InterruptedException {
-
+    private static void CollectScheduleRunResults(String controllerApiHttpAddress, String accessKey, UUID runId, String scheduleName, int timeDelay,boolean isDoneStatusAsSuccess, boolean writePassedKeyframes, LeapworkRun resultRun, final BuildProgressLogger logger, HashMap<String, Integer> repeatedNameMapCounter) throws InterruptedException {
         logger.logSuiteStarted(scheduleName);
         List<UUID> runItemsId = new ArrayList<>();
         Object waiter = new Object();
@@ -165,7 +200,7 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
             {
                 synchronized (waiter)
                 {
-                    waiter.wait(timeDelay * 1000);//Time delay
+                    waiter.wait(timeDelay*1000);//Time delay
                 }
 
                 List<UUID> executedRunItems = pluginHandler.getRunRunItems(client,controllerApiHttpAddress,accessKey,runId);
@@ -175,7 +210,7 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
                 for(ListIterator<UUID> iter = executedRunItems.listIterator(); iter.hasNext();)
                 {
                     UUID runItemId = iter.next();
-                    RunItem runItem = pluginHandler.getRunItem(client,controllerApiHttpAddress,accessKey,runItemId, scheduleName,isDoneStatusAsSuccess,logger );
+                    RunItem runItem = pluginHandler.getRunItem(client,controllerApiHttpAddress,accessKey,runItemId, scheduleName,isDoneStatusAsSuccess, writePassedKeyframes, logger );
 
                     String status = runItem.getCaseStatus();
 
@@ -189,33 +224,51 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
                             iter.remove();
                             break;
                         case "Passed":
-                            String passedFlowTitle  = pluginHandler.correctRepeatedTitles(repeatedNameMapCounter,runItem.getCaseName());
-                            logger.logTestStarted(passedFlowTitle);
-                            logger.message(TeamcityServiceMessagesFormatter.getInstance().testFinishedMessage(passedFlowTitle, Double.toString(runItem.getElapsedTime())));
+                            runItem.setCaseName(pluginHandler.correctRepeatedTitles(repeatedNameMapCounter, runItem.getCaseName()));
+                            logger.logTestStarted(runItem.getCaseName());
+                            logger.message(TeamcityServiceMessagesFormatter.getInstance().testFinishedMessage(runItem.getCaseName(), Double.toString(runItem.getElapsedTime())));
+                            resultRun.incPassed();
+                            resultRun.runItems.add(runItem);
+                            resultRun.incTotal();
                             break;
                         case "Failed":
-                            String failedFlowTitle  = pluginHandler.correctRepeatedTitles(repeatedNameMapCounter,runItem.getCaseName());
-                            logger.logTestStarted(failedFlowTitle);
-                            logger.logTestFailed(failedFlowTitle,runItem.failure.getMessage(),null);
-                            logger.message(TeamcityServiceMessagesFormatter.getInstance().testFinishedMessage(failedFlowTitle, Double.toString(runItem.getElapsedTime())));
+                            runItem.setCaseName(pluginHandler.correctRepeatedTitles(repeatedNameMapCounter, runItem.getCaseName()));
+                            logger.logTestStarted(runItem.getCaseName());
+                            logger.logTestFailed(runItem.getCaseName(),runItem.failure.getMessage(),null);
+                            logger.message(TeamcityServiceMessagesFormatter.getInstance().testFinishedMessage(runItem.getCaseName(), Double.toString(runItem.getElapsedTime())));
+                            resultRun.incFailed();
+                            resultRun.runItems.add(runItem);
+                            resultRun.incTotal();
                             break;
                         case "Error":
                         case "Inconclusive":
                         case "Timeout":
                         case "Cancelled":
-                            String errorFlowTitle  = pluginHandler.correctRepeatedTitles(repeatedNameMapCounter,runItem.getCaseName());
-                            logger.logTestStarted(errorFlowTitle);
-                            logger.logTestFailed(errorFlowTitle,runItem.failure.getMessage(),null);
-                            logger.message(TeamcityServiceMessagesFormatter.getInstance().testFinishedMessage(errorFlowTitle, Double.toString(runItem.getElapsedTime())));
+                            runItem.setCaseName(pluginHandler.correctRepeatedTitles(repeatedNameMapCounter, runItem.getCaseName()));
+                            logger.logTestStarted(runItem.getCaseName());
+                            logger.logTestFailed(runItem.getCaseName(),runItem.failure.getMessage(),null);
+                            logger.message(TeamcityServiceMessagesFormatter.getInstance().testFinishedMessage(runItem.getCaseName(), Double.toString(runItem.getElapsedTime())));
+                            resultRun.incErrors();
+                            resultRun.runItems.add(runItem);
+                            resultRun.incTotal();
                             break;
                         case"Done":
-                            String doneFlowTitle  = pluginHandler.correctRepeatedTitles(repeatedNameMapCounter,runItem.getCaseName());
-                            logger.logTestStarted(doneFlowTitle);
-                            if(isDoneStatusAsSuccess == false)
+                            runItem.setCaseName(pluginHandler.correctRepeatedTitles(repeatedNameMapCounter,runItem.getCaseName()));
+                            if(isDoneStatusAsSuccess && !writePassedKeyframes)
                             {
-                                logger.logTestFailed(doneFlowTitle,runItem.failure.getMessage(),null);
+                                resultRun.incPassed();
                             }
-                            logger.message(TeamcityServiceMessagesFormatter.getInstance().testFinishedMessage(doneFlowTitle, Double.toString(runItem.getElapsedTime())));
+                            else{
+                                if(!isDoneStatusAsSuccess)
+                                    resultRun.incFailed();
+                                else
+                                    resultRun.incPassed();
+                                logger.logTestStarted(runItem.getCaseName());
+                                logger.logTestFailed(runItem.getCaseName(),runItem.failure.getMessage(),null);
+                            }
+                            logger.message(TeamcityServiceMessagesFormatter.getInstance().testFinishedMessage(runItem.getCaseName(), Double.toString(runItem.getElapsedTime())));
+                            resultRun.runItems.add(runItem);
+                            resultRun.incTotal();
                             break;
                     }
                 }
@@ -230,6 +283,9 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
                         isStillRunning = false;
                 }
 
+                if(isStillRunning)
+                    logger.message(String.format("The schedule status is already '%1$s' - wait a minute...", runStatus));
+
             }
             while (isStillRunning);
 
@@ -241,12 +297,10 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
             try {
                 String interruptedExceptionMessage = String.format(Messages.INTERRUPTED_EXCEPTION, e.getMessage());
                 logger.error(interruptedExceptionMessage);
-                Date cancelDate = new Date();
-                logger.logTestStarted("Aborted schedule", cancelDate);
-                logger.logTestFailed("Aborted schedule",  interruptedExceptionMessage, null);
-                logger.logTestFinished("Aborted schedule", cancelDate);
-                logger.logSuiteFinished(scheduleName, cancelDate);
+                RunItem invalidItem = new RunItem("Aborted run","Cancelled",0,e.getMessage(),scheduleName);
                 pluginHandler.stopRun(controllerApiHttpAddress,runId,scheduleName,accessKey, logger);
+                resultRun.incErrors();
+                resultRun.runItems.add(invalidItem);
             }
             finally {
                 lock.unlock();
@@ -256,11 +310,9 @@ class LeapTestTeamCityBridgeBuildProcess extends FutureBasedBuildProcess {
         catch (Exception e)
         {
             logger.error(e.getMessage());
-            Date cancelDate = new Date();
-            logger.logTestStarted("Invalid run", cancelDate);
-            logger.logTestFailed("Invalid run",  e.getMessage(), null);
-            logger.logTestFinished("Invalid run", cancelDate);
-            logger.logSuiteFinished(scheduleName);
+            RunItem invalidItem = new RunItem("Invalid run","Error",0,e.getMessage(),scheduleName);
+            resultRun.incErrors();
+            resultRun.runItems.add(invalidItem);
         }
         finally {
             logger.logSuiteFinished(scheduleName);

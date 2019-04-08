@@ -5,13 +5,22 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.intellij.openapi.vfs.FilePath;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
-import jetbrains.buildServer.agent.BuildProgressLogger;
 
+import jetbrains.buildServer.agent.BuildProgressLogger;
+import jetbrains.buildServer.agent.BuildRunnerContext;
+import org.joda.time.LocalTime;
+
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import java.io.*;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -19,6 +28,10 @@ import java.util.concurrent.ExecutionException;
 public final class PluginHandler {
 
     private static PluginHandler pluginHandler = null;
+
+    private static final String scheduleSeparatorRegex = "\r\n|\n|\\s+,\\s+|,\\s+|\\s+,|,";
+    private static final String variableSeparatorRegex = "\\s+:\\s+|:\\s+|\\s+:|:";
+    private static final String STRING_EMPTY = "";
 
     private PluginHandler(){}
 
@@ -29,6 +42,45 @@ public final class PluginHandler {
         return pluginHandler;
     }
 
+    public String getScheduleVariablesRequestPart(String rawScheduleVariables, final BuildProgressLogger logger)
+    {
+        if(Utils.isBlank(rawScheduleVariables)) return STRING_EMPTY;
+
+        LinkedHashMap<String,String> variables = new LinkedHashMap<>();
+        String[] rawSplittedKeyValuePairs = rawScheduleVariables.split(scheduleSeparatorRegex);
+        for (String rawKeyValuePair : rawSplittedKeyValuePairs)
+        {
+            String[] splittedKeyAndValue = rawKeyValuePair.split(variableSeparatorRegex);
+            if(splittedKeyAndValue.length < 2){
+               logger.warning(String.format(Messages.INVALID_SCHEDULE_VARIABLE,rawKeyValuePair));
+                continue;
+            }
+            String key = splittedKeyAndValue[0];
+            String value = splittedKeyAndValue[1];
+            if(Utils.isBlank(key) || Utils.isBlank(value))
+            {
+                logger.warning(String.format(Messages.INVALID_SCHEDULE_VARIABLE,rawKeyValuePair));
+                continue;
+            }
+            if(Utils.tryAddToMap(variables,key,value) == false)
+            {
+                logger.warning(String.format(Messages.SCHEDULE_VARIABLE_KEY_DUPLICATE,rawKeyValuePair));
+                continue;
+            }
+        }
+        if(variables.isEmpty()) return STRING_EMPTY;
+        String prefix = "?";
+        StringBuilder stringBuilder = new StringBuilder();
+        for(Map.Entry<String,String> variable : variables.entrySet())
+        {
+            stringBuilder.append(prefix).append(variable.getKey()).append("=").append(variable.getValue());
+            prefix = "&";
+        }
+
+        String variableRequestPart = stringBuilder.toString();
+        logger.message(String.format(Messages.SCHEDULE_VARIABLE_REQUEST_PART,variableRequestPart));
+        return variableRequestPart;
+    }
 
     public String correctRepeatedTitles(HashMap<String,Integer> repeatedNameMapCounter, String title)
     {
@@ -51,8 +103,8 @@ public final class PluginHandler {
     {
         ArrayList<String> rawScheduleList = new ArrayList<>();
 
-        String[] schidsArray = rawScheduleIds.split("\n|, |,");
-        String[] testsArray = rawScheduleTitles.split("\n|, |,");
+        String[] schidsArray = rawScheduleIds.split(scheduleSeparatorRegex);
+        String[] testsArray = rawScheduleTitles.split(scheduleSeparatorRegex);
 
         rawScheduleList.addAll(Arrays.asList(schidsArray));
         rawScheduleList.addAll(Arrays.asList(testsArray));
@@ -79,6 +131,11 @@ public final class PluginHandler {
             logger.warning(String.format(Messages.TIME_DELAY_NUMBER_IS_INVALID,defaultTimeDelay));
             return defaultTimeDelay;
         }
+    }
+
+    public boolean isDoneStatusAsSuccess(String doneStatusAs)
+    {
+        return doneStatusAs.contentEquals("Success");
     }
     public String getControllerApiHttpAdderess(String hostname, String rawPort, final BuildProgressLogger logger)
     {
@@ -108,7 +165,7 @@ public final class PluginHandler {
     }
 
 
-    public HashMap<UUID, String> getSchedulesIdTitleHashMap(
+    public LinkedHashMap<UUID, String> getSchedulesIdTitleHashMap(
             AsyncHttpClient client,
             String accessKey,
             String controllerApiHttpAddress,
@@ -117,7 +174,7 @@ public final class PluginHandler {
             ArrayList<InvalidSchedule> invalidSchedules
     ) throws  Exception {
 
-        HashMap<UUID, String> schedulesIdTitleHashMap = new HashMap<>();
+        LinkedHashMap<UUID, String> schedulesIdTitleHashMap = new LinkedHashMap<>();
 
         String scheduleListUri = String.format(Messages.GET_ALL_AVAILABLE_SCHEDULES_URI, controllerApiHttpAddress);
 
@@ -136,8 +193,11 @@ public final class PluginHandler {
                             for (JsonElement jsonScheduleElement : jsonScheduleList) {
                                 JsonObject jsonSchedule = jsonScheduleElement.getAsJsonObject();
 
+                                if(jsonSchedule.get("Type").getAsString().contentEquals("TemporaryScheduleInfo")) continue;
+
                                 UUID Id = Utils.defaultUuidIfNull(jsonSchedule.get("Id"), UUID.randomUUID());
                                 String Title = Utils.defaultStringIfNull(jsonSchedule.get("Title"), "null Title");
+
                                 boolean isEnabled = Utils.defaultBooleanIfNull(jsonSchedule.get("IsEnabled"), false);
 
                                 if (Id.toString().contentEquals(rawSchedule))
@@ -152,6 +212,7 @@ public final class PluginHandler {
                                         else
                                         {
                                             invalidSchedules.add(new InvalidSchedule(rawSchedule, String.format(Messages.SCHEDULE_DISABLED,Title,Id)));
+                                            logger.warning((String.format(Messages.SCHEDULE_DISABLED, Title, Id)));
                                         }
                                     }
 
@@ -247,10 +308,12 @@ public final class PluginHandler {
             String accessKey,
             UUID scheduleId,
             String scheduleTitle,
-            final BuildProgressLogger logger
+            final BuildProgressLogger logger,
+            LeapworkRun run,
+            String scheduleVariablesRequestPart
     ) throws Exception {
 
-        String uri = String.format(Messages.RUN_SCHEDULE_URI, controllerApiHttpAddress, scheduleId.toString());
+        String uri = String.format(Messages.RUN_SCHEDULE_URI, controllerApiHttpAddress, scheduleId.toString(), scheduleVariablesRequestPart);
         try
         {
             Response response = client.preparePut(uri).setHeader("AccessKey",accessKey).setBody("").execute().get();
@@ -270,36 +333,36 @@ public final class PluginHandler {
                 case 400:
                     StringBuilder errorMessage400 = new StringBuilder(String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText()));
                     appendLine(errorMessage400,Messages.INVALID_VARIABLE_KEY_NAME);
-                    return OnScheduleRunFailure(errorMessage400,scheduleTitle,scheduleId,logger);
+                    return OnScheduleRunFailure(errorMessage400,run,scheduleId,logger);
 
                 case 401:
                     StringBuilder errorMessage401 = new StringBuilder(String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText()));
                     appendLine(errorMessage401,Messages.INVALID_ACCESS_KEY);
-                    return OnScheduleRunFailure(errorMessage401,scheduleTitle,scheduleId,logger);
+                    return OnScheduleRunFailure(errorMessage401,run,scheduleId,logger);
 
                 case 404:
                     StringBuilder errorMessage404 = new StringBuilder(String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText()));
                     appendLine(errorMessage404,String.format(Messages.NO_SUCH_SCHEDULE_WAS_FOUND, scheduleTitle, scheduleId));
-                    return OnScheduleRunFailure(errorMessage404,scheduleTitle,scheduleId,logger);
+                    return OnScheduleRunFailure(errorMessage404,run,scheduleId,logger);
 
                 case 446:
                     StringBuilder errorMessage446 = new StringBuilder(String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText()));
                     appendLine(errorMessage446,Messages.NO_DISK_SPACE);
-                    return OnScheduleRunFailure(errorMessage446,scheduleTitle,scheduleId,logger);
+                    return OnScheduleRunFailure(errorMessage446,run,scheduleId,logger);
 
                 case 455:
                     StringBuilder errorMessage455 = new StringBuilder(String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText()));
                     appendLine(errorMessage455,Messages.DATABASE_NOT_RESPONDING);
-                    return OnScheduleRunFailure(errorMessage455,scheduleTitle,scheduleId,logger);
+                    return OnScheduleRunFailure(errorMessage455,run,scheduleId,logger);
 
                 case 500:
                     StringBuilder errorMessage500 = new StringBuilder(String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText()));
                     appendLine(errorMessage500,Messages.CONTROLLER_RESPONDED_WITH_ERRORS);
-                    return OnScheduleRunFailure(errorMessage500,scheduleTitle,scheduleId,logger);
+                    return OnScheduleRunFailure(errorMessage500,run,scheduleId,logger);
 
                 default:
                     StringBuilder errorMessage = new StringBuilder(String.format(Messages.ERROR_CODE_MESSAGE, response.getStatusCode(), response.getStatusText()));
-                    return OnScheduleRunFailure(errorMessage,scheduleTitle,scheduleId,logger);
+                    return OnScheduleRunFailure(errorMessage,run,scheduleId,logger);
             }
         }
         catch (ConnectException | UnknownHostException e)
@@ -320,10 +383,12 @@ public final class PluginHandler {
         return null;
     }
 
-    private static UUID OnScheduleRunFailure(StringBuilder errorMessage,String scheduleTitle,UUID scheduleId, BuildProgressLogger logger)
+    private static UUID OnScheduleRunFailure(StringBuilder errorMessage,LeapworkRun failedRun,UUID scheduleId, BuildProgressLogger logger)
     {
-        logger.error(String.format(Messages.SCHEDULE_RUN_FAILURE, scheduleTitle, scheduleId.toString()));
+        logger.error(String.format(Messages.SCHEDULE_RUN_FAILURE, failedRun.getScheduleTitle(), scheduleId.toString()));
         logger.error(errorMessage.toString());
+        failedRun.setError(errorMessage.toString());
+        failedRun.incErrors();
         return null;
     }
 
@@ -400,6 +465,54 @@ public final class PluginHandler {
             return isSuccessfullyStopped;
         }
 
+    }
+    public File createJUnitReport(final BuildRunnerContext buildRunnerContext, String JunitReportFile, final BuildProgressLogger logger, RunCollection buildResult) throws Exception
+    {
+        String TeamCityWorkSpace = buildRunnerContext.getWorkingDirectory().getAbsolutePath();
+        String JUnitReportFilePath = Paths.get(TeamCityWorkSpace,JunitReportFile).toString();
+        logger.warning(String.format(Messages.TEAMCITY_WORKSPACE_VARIABLE, TeamCityWorkSpace));
+
+        try{
+            File reportFile = new File(JUnitReportFilePath);
+            if(!reportFile.exists()) reportFile.createNewFile();
+                //todo check, maybe possibly do it better
+            reportFile.setLastModified(reportFile.lastModified() - 2000);
+
+
+        try(StringWriter writer = new StringWriter())
+        {
+            JAXBContext context = JAXBContext.newInstance(RunCollection.class);
+
+            Marshaller m = context.createMarshaller();
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            m.marshal(buildResult, writer);
+
+            try(StringWriter formattedWriter  =  new StringWriter())
+            {
+                formattedWriter.append(writer.getBuffer().toString().replace("&amp;#xA;","&#xA;"));
+
+                try (PrintStream out = new PrintStream(new FileOutputStream(reportFile.getAbsolutePath()))) {
+                    out.print(formattedWriter);
+                    out.close();
+                }
+            }
+
+        }
+        return reportFile;
+    }
+        catch (FileNotFoundException e) {
+        logger.error(Messages.REPORT_FILE_NOT_FOUND);
+        logger.error(e.getMessage());
+        throw new Exception(e);
+    } catch (IOException e) {
+        logger.error(Messages.REPORT_FILE_CREATION_FAILURE);
+        logger.error(e.getMessage());
+        throw new Exception(e);
+    } catch (JAXBException e) {
+        logger.error(Messages.REPORT_FILE_CREATION_FAILURE);
+        logger.error(e.getMessage());
+        throw new Exception(e);
+    }
     }
 
     public String getRunStatus(AsyncHttpClient client, String controllerApiHttpAddress, String accessKey, UUID runId) throws Exception {
@@ -503,7 +616,7 @@ public final class PluginHandler {
         }
     }
 
-    public RunItem getRunItem(AsyncHttpClient client, String controllerApiHttpAddress, String accessKey,  UUID runItemId, String scheduleTitle,boolean doneStatusAsSuccess, final BuildProgressLogger logger) throws Exception {
+    public RunItem getRunItem(AsyncHttpClient client, String controllerApiHttpAddress, String accessKey,  UUID runItemId, String scheduleTitle,boolean doneStatusAsSuccess, boolean writePassedKeyframes,final BuildProgressLogger logger) throws Exception {
 
         String uri = String.format(Messages.GET_RUN_ITEM_URI, controllerApiHttpAddress, runItemId.toString());
 
@@ -514,7 +627,6 @@ public final class PluginHandler {
 
                 JsonParser parser = new JsonParser();
                 JsonObject jsonRunItem = parser.parse(response.getResponseBody()).getAsJsonObject();
-                parser = null;
 
                 //FlowInfo
                 JsonElement jsonFlowInfo = jsonRunItem.get("FlowInfo");
@@ -549,8 +661,8 @@ public final class PluginHandler {
                         flowStatus.contentEquals("Connected")    ||
                         flowStatus.contentEquals("Running")      ||
                         flowStatus.contentEquals("NoStatus")     ||
-                        flowStatus.contentEquals("Passed")      ||
-                        (flowStatus.contentEquals("Done") && doneStatusAsSuccess))
+                        (flowStatus.contentEquals("Passed") && !writePassedKeyframes)  ||
+                        (flowStatus.contentEquals("Done") && doneStatusAsSuccess && !writePassedKeyframes))
                 {
                     return runItem;
                 }
@@ -615,6 +727,7 @@ public final class PluginHandler {
                             String keyFrameLogMessage = jsonKeyFrame.getAsJsonObject().get("LogMessage").getAsString();
                             String keyFrame = String.format(Messages.CASE_STACKTRACE_FORMAT, keyFrameTimeStamp, keyFrameLogMessage);
                             appendLine(fullKeyframes,keyFrame);
+                            //fullKeyframes.append("&#xA;");
                         }
 
                     }
@@ -623,6 +736,8 @@ public final class PluginHandler {
                     fullKeyframes.append(environmentTitle);
                     appendLine(fullKeyframes,"Schedule: ");
                     fullKeyframes.append(scheduleTitle);
+                    //logger.warning("Environment: " + environmentTitle);
+                    //logger.warning("Schedule: " + scheduleTitle);
 
                     return new Failure(fullKeyframes.toString());
                 }
@@ -684,5 +799,17 @@ public final class PluginHandler {
             stringBuilder.append(System.getProperty("line.separator"));
             stringBuilder.append(line);
         }
+    }
+
+    public String getReportFileName(String rawReportName, String defaultReportName)
+    {
+        String reportName =  Utils.isBlank(rawReportName) ? defaultReportName : rawReportName;
+
+        if(reportName.contains(".xml") == false)
+        {
+            reportName = reportName.trim().concat(".xml");
+        }
+
+        return reportName;
     }
 }

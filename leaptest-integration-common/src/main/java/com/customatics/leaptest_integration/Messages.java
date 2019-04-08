@@ -3,7 +3,6 @@ package com.customatics.leaptest_integration;
 
 public final class Messages {
 
-    public static final String SCHEDULE_FORMAT = "%1$s[%2$s]";
     public static final String SCHEDULE_DETECTED = "Schedule %1$s[%2$s] successfully detected!";
     public static final String SCHEDULE_RUN_SUCCESS = "Schedule %1$s[%2$s] Launched Successfully!";
 
@@ -15,25 +14,30 @@ public final class Messages {
     public static final String NO_SUCH_RUN_ITEM_WAS_FOUND = "Could not find run item %1$s of %2$s schedule!";
     public static final String NO_SUCH_RUN = "No such run %1$s !";
 
-    public static final String SCHEDULE_CONSOLE_LOG_SEPARATOR = "----------------------------------------------------------------------------------------";
+    public static final String REPORT_FILE_NOT_FOUND = "Couldn't find report file! Wrong path! Press \"help\" button nearby \"report\" textbox! ";
+    public static final String REPORT_FILE_CREATION_FAILURE = "Failed to create a report file!";
+
+    public static final String SCHEDULE_CONSOLE_LOG_SEPARATOR = "//////////////////////////////////////////////////////////////////////////////////////";
     public static final String CASE_CONSOLE_LOG_SEPARATOR = "----------------------------------------------------------------------------------------";
 
     public static final String CASE_INFORMATION = "RunItem: %1$s | Status: %2$s | Elapsed: %3$s";
     public static final String CASE_STACKTRACE_FORMAT = "%1$s - %2$s";
 
     public static final String GET_ALL_AVAILABLE_SCHEDULES_URI = "%1$s/api/v3/schedules";
-    public static final String RUN_SCHEDULE_URI = "%1$s/api/v3/schedules/%2$s/runNow";
+    public static final String RUN_SCHEDULE_URI = "%1$s/api/v3/schedules/%2$s/runNow%3$s";
     public static final String STOP_RUN_URI = "%1$s/api/v3/run/%2$s/stop";
-    public static final String STOP_SCHEDULE_URI = "%1$s/api/v3/schedules/%2$s/stop";
-    public static final String GET_RUN_URI = "%1$s/api/v3/run/%2$s";
     public static final String GET_RUN_STATUS_URI = "%1$s/api/v3/run/%2$s/status";
     public static final String GET_RUN_ITEMS_IDS_URI = "%1$s/api/v3/run/%2$s/runItemIds";
     public static final String GET_RUN_ITEM_URI = "%1$s/api/v3/runItems/%2$s";
     public static final String GET_RUN_ITEM_KEYFRAMES_URI = "%1$s/api/v3/runItems/%2$s/keyframes";
+    public static final String TEAMCITY_WORKSPACE_VARIABLE = "WORKSPACE: %1$s";
 
 
     public static final String INVALID_SCHEDULES = "INVALID SCHEDULES";
-    public static final String PLUGIN_NAME = "Leapwork Integration";
+    public static final String INVALID_SCHEDULE_VARIABLE = "Failed to parse variable: %1$s";
+    public static final String SCHEDULE_VARIABLE_KEY_DUPLICATE = "Key value pair with the same key already exists: %1$s. This pair will be ignored";
+    public static final String SCHEDULE_VARIABLE_REQUEST_PART = "Schedule variables request part: %1$s";
+
 
     public static final String NO_SCHEDULES = "No Schedules to run! All schedules you've selected could be deleted. Or you simply have forgotten to select schedules after changing controller address;";
 
@@ -46,11 +50,9 @@ public final class Messages {
     public static final String ERROR_CODE_MESSAGE = "Code: %1$s Status: %2$s!";
     public static final String COULD_NOT_CONNECT_TO = "Could not connect to %1$s! Check it and try again! ";
     public static final String COULD_NOT_CONNECT_TO_BUT_WAIT = "Could not connect to %1$s! Check connection! The plugin is waiting for connection reestablishment! ";
-    public static final String CONNECTION_LOST = "Connection to controller is lost: %1$s! The plugin is waiting for connection reestablishment!";
     public static final String INTERRUPTED_EXCEPTION = "Interrupted exception: %1$s!";
     public static final String EXECUTION_EXCEPTION = "Execution exception: %1$s!";
     public static final String IO_EXCEPTION = "I/O exception: %1$s!";
-
 
     public static final String STOPPING_RUN = "Stopping schedule %1$s run %2$s!";
 
@@ -72,16 +74,18 @@ public final class Messages {
 
     public static final String SCHEDULE_DISABLED = "Schedule %1$s[%2$s] is disabled!";
 
-    public static final String INPUT_VALUES_MESSAGE = "LeapWork Plugin input parameters:";
-    public static final String INPUT_HOSTNAME_VALUE = "LEAPWORK controller hostname: %1$s";
-    public static final String INPUT_PORT_VALUE = "LEAPWORK controller port: %1$s";
-    public static final String INPUT_ACCESS_KEY_VALUE = "LEAPWORK controller Access Key: %1$s";
-    public static final String INPUT_SCHEDULE_NAMES_VALUE = "Schedule names: %1$s";
-    public static final String INPUT_SCHEDULE_IDS_VALUE = "Schedule ids: %1$s";
-    public static final String INPUT_DELAY_VALUE = "Delay between status checks: %1$s";
-    public static final String INPUT_DONE_VALUE = "Done Status As: %1$s";
-    public static final String INPUT_CONTROLLER_URL = "LEAPWORK Controller URL: %1$b";
+    public static final String SCHEDULE_TITLE = "Schedule: %1$s[%2$s]";
+    public static final String CASES_PASSED = "Passed testcases: %1$d";
+    public static final String CASES_FAILED = "Failed testcases: %1$d";
+    public static final String CASES_ERRORED = "Error testcases: %1$d";
+
+    public static final String TOTAL_SEPARATOR = "|---------------------------------------------------------------";
+    public static final String TOTAL_CASES_PASSED = "| Total passed testcases: %1$d";
+    public static final String TOTAL_CASES_FAILED = "| Total failed testcases: %1$d";
+    public static final String TOTAL_CASES_ERROR = "| Total error testcases: %1$d";
 
     public static final String FAILED_TO_PARSE_RESPONSE_KEYFRAME_JSON_ARRAY = "Failed to parse response keyframe json array";
+    public static final String ERROR_NOTIFICATION = "[ERROR] There were detected case(s) with status 'Failed', 'Error', 'Inconclusive', 'Timeout' or 'Cancelled'. Please check the report or console output for details. Set the build status to FAILURE as the results of the cases are not deterministic..";
+
 
 }

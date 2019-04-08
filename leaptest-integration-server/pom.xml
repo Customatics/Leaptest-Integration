@@ -4,7 +4,7 @@
   <parent>
     <artifactId>leaptest-integration</artifactId>
     <groupId>com.customatics</groupId>
-    <version>3.1.0</version>
+    <version>3.1.1</version>
   </parent>
   <artifactId>leaptest-integration-server</artifactId>
   <packaging>jar</packaging>
@@ -13,7 +13,7 @@
     <dependency>
       <groupId>com.customatics</groupId>
       <artifactId>leaptest-integration-common</artifactId>
-      <version>3.1.0</version>
+      <version>3.1.1</version>
       <scope>compile</scope>
     </dependency>
 
@@ -38,6 +38,12 @@
       <version>${teamcity-version}</version>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>com.customatics</groupId>
+          <artifactId>leaptest-integration-agent</artifactId>
+          <version>3.1.1</version>
+          <scope>compile</scope>
+      </dependency>
 
   </dependencies>
 </project>

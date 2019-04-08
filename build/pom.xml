@@ -4,7 +4,7 @@
   <parent>
     <artifactId>leaptest-integration</artifactId>
     <groupId>com.customatics</groupId>
-    <version>3.1.0</version>
+    <version>3.1.1</version>
   </parent>
   <artifactId>build</artifactId>
   <packaging>pom</packaging>
@@ -18,17 +18,17 @@
       <dependency>
            <groupId>com.customatics</groupId>
            <artifactId>leaptest-integration-agent</artifactId>
-           <version>3.1.0</version>
+           <version>3.1.1</version>
       </dependency>
       <dependency>
            <groupId>com.customatics</groupId>
            <artifactId>leaptest-integration-common</artifactId>
-           <version>3.1.0</version>
+           <version>3.1.1</version>
       </dependency>
       <dependency>
            <groupId>com.customatics</groupId>
            <artifactId>leaptest-integration-server</artifactId>
-           <version>3.1.0</version>
+           <version>3.1.1</version>
       </dependency>
   </dependencies>
   <build>
@@ -50,14 +50,17 @@
                 <outputFile>${basedir}/target/teamcity-plugin.xml</outputFile>
                 <replacements>
                     <replacement>
+                        <!--suppress UnresolvedMavenProperty -->
                         <token>@Version@</token>
                         <value>${teamcity.leaptest-integration.plugin.version}</value>
                     </replacement>
                     <replacement>
+                        <!--suppress UnresolvedMavenProperty -->
                         <token>@VendorName@</token>
                         <value>${teamcity.leaptest-integration.plugin.vendorName}</value>
                     </replacement>
                     <replacement>
+                        <!--suppress UnresolvedMavenProperty -->
                         <token>@VendorURL@</token>
                         <value>${teamcity.leaptest-integration.plugin.vendorUrl}</value>
                     </replacement>

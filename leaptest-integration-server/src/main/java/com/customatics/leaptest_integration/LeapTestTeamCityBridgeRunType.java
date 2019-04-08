@@ -7,6 +7,7 @@ import jetbrains.buildServer.serverSide.PropertiesProcessor;
 import jetbrains.buildServer.serverSide.RunType;
 import jetbrains.buildServer.serverSide.RunTypeRegistry;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
+import com.customatics.leaptest_integration.Utils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -61,9 +62,10 @@ public class LeapTestTeamCityBridgeRunType extends RunType {
     @Override
     public Map<String, String> getDefaultRunnerProperties() {
         HashMap<String, String> defaults = new HashMap<String, String>();
-        defaults.put(StringConstants.ParameterName_DoneStatus, "Failed");
+        defaults.put(StringConstants.ParameterName_DoneStatus, "Success");
         defaults.put(StringConstants.ParameterName_TimeDelay,"3");
         defaults.put(StringConstants.ParameterName_Port,"9001");
+        defaults.put(StringConstants.ParameterName_Report, "report.xml");
         return defaults;
     }
 
@@ -85,10 +87,16 @@ public class LeapTestTeamCityBridgeRunType extends RunType {
         sb.append(parameters.get(StringConstants.ParameterName_Port));
         sb.append("\nAccess Key: ");
         sb.append(parameters.get(StringConstants.ParameterName_AccessKey));
+        sb.append("\nReport File: ");
+        sb.append(parameters.get(StringConstants.ParameterName_Report));
         sb.append("\nTime Delay: ");
         sb.append(parameters.get(StringConstants.ParameterName_TimeDelay));
         sb.append("\nDone Status As:");
         sb.append(parameters.get(StringConstants.ParameterName_DoneStatus));
+        sb.append("\nWrite keyframes of passed flows: ");
+        sb.append(Utils.defaultBooleanIfNull(parameters.get(StringConstants.ParameterName_PassedKeyframes), false));
+        sb.append("\nSchedule Variables: ");
+        sb.append(parameters.get(StringConstants.ParameterName_ScheduleVariables));
         sb.append("\nSchedule Names: ");
         sb.append(parameters.get(StringConstants.ParameterName_ScheduleNames));
         sb.append("\nSchedule Ids: ");

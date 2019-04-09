@@ -39,11 +39,3 @@ LEAPWORK is a mighty automation testing system and now it can be used for runnin
 
 # Troubleshooting
 - If you catch an error "No such run [runId]!" after schedule starting, increase time delay parameter.
-
-# Screenshots
-![ScreenShot](https://github.com/Customatics/Leaptest-Integration/tree/master/leaptest-integration-agent/src/main/resources/images/input.png)
-![ScreenShot](https://github.com/Customatics/Leaptest-Integration/tree/master/leaptest-integration-agent/src/main/resources/images/overview.png)
-![ScreenShot](https://github.com/Customatics/Leaptest-Integration/tree/master/leaptest-integration-agent/src/main/resources/images/tests.png)
-![ScreenShot](https://github.com/Customatics/Leaptest-Integration/tree/master/leaptest-integration-agent/src/main/resources/images/log.png)
-
-

@@ -143,6 +143,7 @@ function GetSch() {
                                 "4.Controller is not running or updating now, check it in services\n" +
                                 "5.Your Leapwork Controller API port is blocked.\nUse 'netstat -na | find \"9001\"' command, The result should be:\n 0.0.0.0:9001  0.0.0.0:0  LISTENING\n" +
                                 "6.Your browser has such a setting enabled that blocks any http requests from https\n" +
+                                "7.Check that the schedules you try to run are enabled in Leapwork\n" + 
                                 "If nothing helps, please contact support https://leapwork.com/support"
                                 );
                       }
